@@ -1,0 +1,22 @@
+{
+  "name": "Bì Bì",
+  "short_name": "Bì Bì",
+  "description": "Gợi ý decor, mỹ phẩm, văn phòng phẩm, phụ kiện và quà tặng dễ thương.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fbff",
+  "theme_color": "#b6d6ff",
+  "icons": [
+    {
+      "src": "/assets/bibi-logo-circle.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/bibi-logo-circle.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

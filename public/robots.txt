@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /search
+Disallow: /yeu-thich
+Disallow: /404
+Disallow: /wishlist
+Disallow: /cart
+Disallow: /checkout
+Disallow: /payment
+Disallow: /order
+Disallow: /order-tracking
+Disallow: /account
+Disallow: /admin
+Sitemap: http://127.0.0.1:4173/sitemap.xml
