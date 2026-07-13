@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { budgetOptions, filterBudgetIdeas, getBudgetIdeas, getBudgetOption, getIdeaCategoryPage } from './categoryIdeas';
 import { FloatingMascot } from './FloatingMascot';
-import { BudgetPage, CollectionLandingPage, DetailPage, HomePage, IdeaCategoryPage, NotFoundPage, ProductListPage, buildBudgetRangeText, buildBudgetSubtitle } from './pages/bibiPages';
+import { BudgetPage, CollectionLandingPage, DetailPage, HomePage, IdeaCategoryPage, NotFoundPage, ProductListPage, ShopTheLookSection, StationeryPage, buildBudgetRangeText, buildBudgetSubtitle } from './pages/bibiPages';
 import { Icon } from './components/Icon';
 import {
   getCategorySlugFromPath,
   normalizePathname,
   routeForAccessories,
-  routeForBeauty,
   routeForBudget,
   routeForCategory,
   routeForDecorHome,
@@ -441,6 +440,31 @@ function buildProductCatalog(lang) {
   });
 }
 
+function buildShopLookRooms(lang) {
+  return ideas.slice(0, 3).map((idea) => {
+    const meta = idea.meta[lang];
+    const products = (meta.shoppingItems || []).map((item, index) => ({
+      id: `${idea.slug}-shop-${index}`,
+      name: item.name,
+      category: item.shop,
+      brand: item.shop,
+      price: item.price,
+      color: Array.isArray(idea.palette) ? `#${String(idea.palette[index % idea.palette.length]).replace('#', '')}` : '',
+      thumbnail: idea.image,
+      affiliateUrl: '#',
+      hotspotX: 20 + index * 18,
+      hotspotY: 28 + index * 12,
+    }));
+
+    return {
+      id: idea.slug,
+      title: meta.title,
+      image: idea.image,
+      products,
+    };
+  });
+}
+
 const copy = {
   vi: {
     metaTitle: 'Bì Bì - Góc nhỏ gom những món xinh xinh cho bạn',
@@ -490,7 +514,6 @@ const copy = {
     navItems: [
       { id: 'home', label: 'Trang chủ', route: '/' },
       { id: 'decor', label: 'Decor', route: routeForDecorHome() },
-      { id: 'beauty', label: 'Mỹ phẩm', route: routeForBeauty() },
       { id: 'stationery', label: 'Văn phòng phẩm', route: routeForStationery() },
       { id: 'accessories', label: 'Phụ kiện', route: routeForAccessories() },
       { id: 'gifts', label: 'Quà tặng', route: routeForGifts() },
@@ -502,9 +525,9 @@ const copy = {
     footer: {
       introTitle: 'Bì Bì là nơi gom những món xinh xinh từ nhiều danh mục.',
       introText:
-        'Khám phá decor, mỹ phẩm, văn phòng phẩm, phụ kiện và quà tặng theo vibe dễ thương, sáng sủa và dễ lưu lại.',
+        'Khám phá decor, văn phòng phẩm, phụ kiện và quà tặng theo vibe dễ thương, sáng sủa và dễ lưu lại.',
       exploreTitle: 'Danh mục',
-      exploreItems: ['Decor', 'Mỹ phẩm', 'Văn phòng phẩm', 'Phụ kiện', 'Quà tặng', 'Đồ cute khác'],
+      exploreItems: ['Decor', 'Văn phòng phẩm', 'Phụ kiện', 'Quà tặng', 'Đồ cute khác'],
       shopTitle: 'Bộ sưu tập',
       shopItems: ['Gợi ý hôm nay', 'Theo ngân sách', 'Theo mood', 'Yêu thích'],
       disclaimer:
@@ -533,11 +556,11 @@ const copy = {
     },
   },
   en: {
-    metaTitle: 'Bì Bì - Cute picks across decor, beauty and gifts',
+    metaTitle: 'Bì Bì - Cute picks across decor and gifts',
     tagline: 'Cute affiliate picks',
     searchPlaceholder: 'Search ideas, cute picks, or categories...',
     heroTitle: 'Bì Bì – A little corner for all the cute picks you love',
-    heroSubtitle: 'Decor, beauty, stationery and more adorable inspirations every day.',
+    heroSubtitle: 'Decor, stationery and more adorable inspirations every day.',
     heroCta: 'Explore now',
     categoriesTitle: 'Popular categories',
     categoriesSub: 'Tap any category to see picks that match your vibe.',
@@ -567,7 +590,7 @@ const copy = {
     allProducts: 'View cute picks',
     browseHint: 'Tap a pick to open its matching detail.',
     productsTitle: 'Explore all cute picks',
-    productsSubtitle: 'A mixed discovery list of decor, beauty, stationery, accessories and gifts for quick browsing.',
+    productsSubtitle: 'A mixed discovery list of decor, stationery, accessories and gifts for quick browsing.',
     productsSearch: 'Search picks, categories, platforms...',
     productsSectionTitle: 'Pick list',
     productsSectionSub: 'Choose a pick to open the matching collection or shop link.',
@@ -580,7 +603,6 @@ const copy = {
     navItems: [
       { id: 'home', label: 'Home', route: '/' },
       { id: 'decor', label: 'Decor', route: routeForDecorHome() },
-      { id: 'beauty', label: 'Beauty', route: routeForBeauty() },
       { id: 'stationery', label: 'Stationery', route: routeForStationery() },
       { id: 'accessories', label: 'Accessories', route: routeForAccessories() },
       { id: 'gifts', label: 'Gifts', route: routeForGifts() },
@@ -592,9 +614,9 @@ const copy = {
     footer: {
       introTitle: 'Bì Bì collects cute picks across multiple categories.',
       introText:
-        'Discover decor, beauty, stationery, accessories and gifts with a soft pastel vibe that is easy to save and revisit.',
+        'Discover decor, stationery, accessories and gifts with a soft pastel vibe that is easy to save and revisit.',
       exploreTitle: 'Categories',
-      exploreItems: ['Decor', 'Beauty', 'Stationery', 'Accessories', 'Gifts', 'Cute extras'],
+      exploreItems: ['Decor', 'Stationery', 'Accessories', 'Gifts', 'Cute extras'],
       shopTitle: 'Collections',
       shopItems: ['Today’s picks', 'By budget', 'By mood', 'Saved'],
       disclaimer:
@@ -634,16 +656,6 @@ const categories = [
     iconSrc: '/assets/home-category-decor-home.png',
     descriptionVi: 'Không gian sống xinh xắn',
     descriptionEn: 'Cute home ideas',
-  },
-  {
-    slug: 'beauty',
-    color: 'rose',
-    labelVi: 'Mỹ phẩm',
-    labelEn: 'Beauty',
-    route: routeForBeauty(),
-    iconSrc: '/assets/home-category-beauty-home.png',
-    descriptionVi: 'Skincare và makeup nhẹ nhàng',
-    descriptionEn: 'Soft skincare and makeup',
   },
   {
     slug: 'stationery',
@@ -703,20 +715,6 @@ const affiliatePicks = [
     image: '/assets/study-blue.jpg',
   },
   {
-    id: 'pick-beauty-skincare',
-    titleVi: 'Skincare mini dịu nhẹ',
-    titleEn: 'Gentle mini skincare',
-    descriptionVi: 'Làm dịu buổi sáng với bộ dưỡng da nhỏ xinh, gọn gàng và dễ mang theo.',
-    descriptionEn: 'A compact skincare set that feels calm, tidy and easy to carry.',
-    categoryVi: 'Mỹ phẩm',
-    categoryEn: 'Beauty',
-    priceVi: '~189.000đ',
-    priceEn: '~189,000 VND',
-    source: 'Lazada',
-    route: routeForBeauty(),
-    image: '/assets/bedroom-pink.jpg',
-  },
-  {
     id: 'pick-stationery-note',
     titleVi: 'Sổ tay mây bồng',
     titleEn: 'Cloudy notebook',
@@ -773,20 +771,6 @@ const affiliatePicks = [
     image: '/assets/hero-bg-desktop.jpg',
   },
   {
-    id: 'pick-beauty-lip',
-    titleVi: 'Son tint hồng đào',
-    titleEn: 'Peach pink tint',
-    descriptionVi: 'Màu son mềm nhẹ, dễ dùng hằng ngày và không kén tông da.',
-    descriptionEn: 'A soft everyday tint that is easy to wear on many skin tones.',
-    categoryVi: 'Mỹ phẩm',
-    categoryEn: 'Beauty',
-    priceVi: '~155.000đ',
-    priceEn: '~155,000 VND',
-    source: 'Shopee',
-    route: routeForBeauty(),
-    image: '/assets/bedroom-pink.jpg',
-  },
-  {
     id: 'pick-stationery-pen',
     titleVi: 'Set bút highlight mây',
     titleEn: 'Cloud highlight pen set',
@@ -830,32 +814,342 @@ const affiliatePicks = [
   },
 ];
 
-const broadPageConfigs = {
-  [routeForBeauty()]: {
-    titleVi: 'Mỹ phẩm',
-    titleEn: 'Beauty',
-    subtitleVi: 'Skincare nhẹ nhàng, son xinh và những món nhỏ khiến việc chăm sóc bản thân dễ thương hơn.',
-    subtitleEn: 'Soft skincare, cute makeup and small picks that make self-care feel sweet.',
-    heroImage: '/assets/bedroom-pink.jpg',
-    accent: 'rose',
-    emptyTitleVi: 'Chưa có món mỹ phẩm nào ở đây.',
-    emptyTitleEn: 'No beauty picks here yet.',
-    emptyTextVi: 'Hãy quay lại sau để xem thêm các gợi ý dễ thương hơn nhé.',
-    emptyTextEn: 'Come back soon to see more adorable beauty picks.',
-    items: affiliatePicks.filter((item) => item.route === routeForBeauty()),
+const tx = (vi, en) => ({ vi, en });
+const stationeryImagePool = [
+  '/assets/art-supplies.jpg',
+  '/assets/study-blue.jpg',
+  '/assets/bookshelf.jpg',
+  '/assets/products-hero-desktop.jpg',
+  '/assets/hero-bg-desktop.jpg',
+  '/assets/footer-bg-desktop.jpg',
+];
+
+const stationImage = (query) => {
+  const key = String(query || '').toLowerCase();
+  if (key.includes('planner') || key.includes('notebook') || key.includes('journal') || key.includes('paper')) {
+    return '/assets/art-supplies.jpg';
+  }
+  if (key.includes('study') || key.includes('desk') || key.includes('minimal') || key.includes('office')) {
+    return '/assets/study-blue.jpg';
+  }
+  if (key.includes('sticker') || key.includes('washi') || key.includes('gift') || key.includes('ribbon')) {
+    return '/assets/footer-bg-desktop.jpg';
+  }
+  if (key.includes('organizer') || key.includes('case') || key.includes('clip') || key.includes('pen')) {
+    return '/assets/products-hero-desktop.jpg';
+  }
+
+  let hash = 0;
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 31 + key.charCodeAt(index)) % stationeryImagePool.length;
+  }
+  return stationeryImagePool[hash];
+};
+const shopSearchUrl = (base, query) => `${base}${encodeURIComponent(query)}`;
+
+const stationeryPageData = {
+  hero: {
+    title: tx('Văn phòng phẩm xinh xắn cho góc học tập & làm việc', 'Cute stationery for study and work corners'),
+    subtitle: tx(
+      'Tổng hợp những món stationery dễ thương, tiện dụng và đáng mua: sổ tay, bút, sticker, kẹp giấy, hộp bút, planner và nhiều món nhỏ xinh khác.',
+      'A curated mix of cute, practical stationery picks: notebooks, pens, stickers, paper clips, pencil cases, planners and more tiny delights.',
+    ),
+    cta: tx('Khám phá ngay', 'Explore now'),
+    image: stationImage('pastel stationery desk planner notebook'),
+    secondaryImage: stationImage('cute stationery flat lay pastel'),
   },
+  heroChips: [
+    tx('Bàn học pastel', 'Pastel desk'),
+    tx('Sổ bút xinh xắn', 'Cute notes'),
+    tx('Học tập nhẹ nhàng', 'Soft study mood'),
+    tx('Dễ mua, dễ tặng', 'Easy to buy, easy to gift'),
+  ],
+  quickCategories: [
+    { id: 'planner', icon: '📒', label: tx('Sổ tay & Planner', 'Notebooks & planners') },
+    { id: 'pen', icon: '🖊️', label: tx('Bút viết cute', 'Cute pens') },
+    { id: 'sticker', icon: '🪄', label: tx('Sticker & Washi tape', 'Sticker & washi tape') },
+    { id: 'case', icon: '🧸', label: tx('Hộp bút & Túi đựng', 'Pencil cases & pouches') },
+    { id: 'clip', icon: '📎', label: tx('Kẹp giấy & Ghi chú', 'Paper clips & notes') },
+    { id: 'study', icon: '✏️', label: tx('Dụng cụ học tập', 'Study tools') },
+    { id: 'decor', icon: '🪴', label: tx('Đồ decor bàn học', 'Desk decor') },
+    { id: 'combo', icon: '🎁', label: tx('Combo stationery', 'Stationery combo') },
+  ],
+  filters: [
+    { id: 'all', label: tx('Tất cả', 'All') },
+    { id: 'under-50k', label: tx('Dưới 50k', 'Under 50k') },
+    { id: 'under-100k', label: tx('Dưới 100k', 'Under 100k') },
+    { id: 'best', label: tx('Best seller', 'Best seller') },
+    { id: 'cute', label: tx('Cute nhất', 'Cutest') },
+    { id: 'student', label: tx('Dành cho học sinh', 'For students') },
+    { id: 'office', label: tx('Dành cho văn phòng', 'For office') },
+    { id: 'gift', label: tx('Làm quà tặng', 'Giftable') },
+    { id: 'pastel', label: tx('Màu pastel', 'Pastel colors') },
+  ],
+  vibeTitle: tx('Góc học tập xinh hơn mỗi ngày', 'A cuter study corner every day'),
+  vibeSubtitle: tx('Các combo theo vibe để bạn chọn đúng mood rồi đi tiếp đến món hợp nhất.', 'Curated vibes to help you choose the right mood before diving into the matching picks.'),
+  vibes: [
+    {
+      id: 'pastel-study',
+      title: tx('Góc học tập pastel', 'Pastel study corner'),
+      description: tx('Nhẹ nhàng, sáng sủa và đủ dễ thương để ngồi học lâu hơn một chút.', 'Light, bright and cute enough to make long study sessions feel easier.'),
+      image: stationImage('pastel study desk notebook sticker'),
+      cta: tx('Xem sản phẩm', 'View products'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('stationery pastel study')}`,
+    },
+    {
+      id: 'minimal-work',
+      title: tx('Góc làm việc tối giản', 'Minimal work corner'),
+      description: tx('Gọn gàng hơn, sạch sẽ hơn và vẫn giữ được vibe mềm mại.', 'Neater, cleaner and still soft enough to feel friendly.'),
+      image: stationImage('minimal desk stationery notebook'),
+      cta: tx('Xem sản phẩm', 'View products'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('minimal stationery desk')}`,
+    },
+    {
+      id: 'journaling-cute',
+      title: tx('Góc journaling cute', 'Cute journaling nook'),
+      description: tx('Cho những trang sổ đầy sticker, washi tape và ghi chú xinh.', 'For pages full of stickers, washi tape and cute notes.'),
+      image: stationImage('journaling sticker washi tape pastel'),
+      cta: tx('Xem sản phẩm', 'View products'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('journaling stationery')}`,
+    },
+    {
+      id: 'planner',
+      title: tx('Góc planner năng suất', 'Productive planner corner'),
+      description: tx('Dễ sắp xếp việc học, việc làm và các deadline nhỏ mỗi ngày.', 'Great for organizing school, work and everyday deadlines.'),
+      image: stationImage('planner notebook pastel desk'),
+      cta: tx('Xem sản phẩm', 'View products'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('planner notebook stationery')}`,
+    },
+    {
+      id: 'gift',
+      title: tx('Góc quà tặng nhỏ xinh', 'Tiny gift corner'),
+      description: tx('Những món nhỏ mà nhìn là muốn gói ngay để tặng.', 'Small picks that feel ready to wrap and gift right away.'),
+      image: stationImage('gift stationery pastel ribbon'),
+      cta: tx('Xem sản phẩm', 'View products'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('stationery gift')}`,
+    },
+  ],
+  productsTitle: tx('Sản phẩm nổi bật', 'Featured picks'),
+  productsSubtitle: tx('Card sản phẩm ưu tiên ảnh thực tế, giá tham khảo và nút xem deal gọn gàng.', 'Product cards with real-life photos, reference prices and a clean deal button.'),
+  spotlightTitle: tx('Bì Bì gợi ý hôm nay', 'Bì Bì picks today'),
+  spotlightSubtitle: tx('Những món đáng mua nhất để bạn chốt nhanh nếu đang cần một vài item tốt.', 'Our most recommended picks if you want a few great items to grab first.'),
+  bannerTitle: tx('Một chiếc bàn học xinh có thể làm bạn muốn học hơn một chút.', 'A pretty study desk can make you want to study a little more.'),
+  bannerSubtitle: tx('Mở thử đồ decor bàn học để setup góc ngồi của bạn mềm mại hơn.', 'Explore desk decor ideas and make your setup feel a little softer.'),
+  bannerCta: tx('Xem đồ decor bàn học', 'View desk decor'),
+  bannerRoute: routeForCategory('ban-lam-viec'),
+  bannerMascot: '/assets/mascot.png',
+  needsTitle: tx('Mua theo nhu cầu', 'Shop by need'),
+  needsSubtitle: tx('Chọn đúng mục đích trước khi lướt món để tiết kiệm thời gian hơn.', 'Pick your use case first so browsing feels quicker and more intentional.'),
+  needs: [
+    {
+      id: 'school',
+      icon: '🎒',
+      title: tx('Đi học', 'For school'),
+      description: tx('Những món gọn nhẹ, dễ mang theo và hợp nhịp học tập.', 'Portable picks that fit a student routine.'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('stationery học sinh')}`,
+    },
+    {
+      id: 'office',
+      icon: '💼',
+      title: tx('Đi làm', 'For work'),
+      description: tx('Gọn gàng, lịch sự và đủ tiện để làm việc mỗi ngày.', 'Tidy, polished and practical for everyday work.'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('stationery office')}`,
+    },
+    {
+      id: 'notes',
+      icon: '📝',
+      title: tx('Ghi chép hằng ngày', 'Daily notes'),
+      description: tx('Sổ, sticky note và bút để ghi chú nhanh hơn.', 'Notebooks, sticky notes and pens for quick note-taking.'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('planner notebook')}`,
+    },
+    {
+      id: 'decorate',
+      icon: '🎀',
+      title: tx('Trang trí sổ', 'Decorate notes'),
+      description: tx('Sticker, washi tape và vài món nhỏ để trang vở vui hơn.', 'Stickers, washi tape and little extras to brighten your pages.'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('washi tape sticker')}`,
+    },
+    {
+      id: 'gift',
+      icon: '🎁',
+      title: tx('Làm quà tặng', 'Gift ideas'),
+      description: tx('Những món xinh, giá dễ chịu và rất hợp để tặng bạn bè.', 'Cute, affordable picks that make lovely gifts.'),
+      route: `${routeForSearch()}?q=${encodeURIComponent('stationery gift')}`,
+    },
+    {
+      id: 'desk',
+      icon: '🪑',
+      title: tx('Setup bàn học', 'Desk setup'),
+      description: tx('Từ đồ dùng đến decor, gom lại thành một góc ngồi hoàn chỉnh.', 'From tools to decor, build a complete little setup.'),
+      route: routeForCategory('ban-lam-viec'),
+    },
+  ],
+  seo: tx(
+    'Bì Bì tổng hợp các món văn phòng phẩm dễ thương, giá tốt và phù hợp với nhiều nhu cầu như học tập, làm việc, journaling, planner hoặc trang trí góc bàn. Các sản phẩm được chọn lọc từ nhiều sàn thương mại điện tử để bạn dễ tham khảo và mua sắm hơn.',
+    'Bì Bì gathers cute stationery picks that feel affordable and useful for school, work, journaling, planning or decorating your desk. The products are curated from multiple marketplaces so you can compare and shop more easily.',
+  ),
+  seoFacts: [
+    { label: tx('Nhu cầu', 'Use cases'), value: tx('Học tập, làm việc, journaling', 'School, work, journaling') },
+    { label: tx('Mức giá', 'Price range'), value: tx('Nhiều món dưới 100k', 'Many items under 100k') },
+    { label: tx('Nguồn', 'Sources'), value: tx('Shopee, Lazada, TikTok Shop', 'Shopee, Lazada, TikTok Shop') },
+    { label: tx('Tone', 'Mood'), value: tx('Pastel, cute, sạch sẽ', 'Pastel, cute and clean') },
+  ],
+  products: [
+    {
+      id: 'planner-pastel',
+      name: tx('Sổ planner pastel', 'Pastel planner notebook'),
+      description: tx('Sổ planner bìa mềm cho lịch học, lịch làm việc và các mục tiêu nhỏ mỗi ngày.', 'A soft-cover planner for classes, work schedules and daily goals.'),
+      price: '79.000đ',
+      priceValue: 79000,
+      source: 'Shopee',
+      image: stationImage('pastel planner notebook desk'),
+      dealUrl: shopSearchUrl('https://shopee.vn/search?keyword=', 'planner pastel notebook'),
+      tags: tx(['Cute', 'Dưới 100k', 'Hot'], ['Cute', 'Under 100k', 'Hot']),
+      categories: ['all', 'planner', 'study', 'combo'],
+      flags: ['cute', 'best', 'pastel', 'student', 'gift', 'under-100k'],
+    },
+    {
+      id: 'highlight-pen',
+      name: tx('Bộ bút highlight', 'Highlight pen set'),
+      description: tx('Bộ bút highlight màu nhẹ, dễ chia màu và không gây rối mắt.', 'Soft-color highlighters that keep notes organized without visual clutter.'),
+      price: '59.000đ',
+      priceValue: 59000,
+      source: 'Lazada',
+      image: stationImage('pastel highlighter pens desk'),
+      dealUrl: shopSearchUrl('https://www.lazada.vn/catalog/?q=', 'highlight pen pastel'),
+      tags: tx(['Cute', 'Dưới 100k', 'Pastel'], ['Cute', 'Under 100k', 'Pastel']),
+      categories: ['all', 'pen', 'study', 'office'],
+      flags: ['cute', 'pastel', 'student', 'office', 'under-100k'],
+    },
+    {
+      id: 'sticker-set',
+      name: tx('Sticker trang trí dễ thương', 'Cute sticker set'),
+      description: tx('Sticker nhiều chủ đề để trang sổ, planner và hộp bút trông vui hơn.', 'A playful sticker set for decorating planners, notebooks and pencil cases.'),
+      price: '35.000đ',
+      priceValue: 35000,
+      source: 'Shopee',
+      image: stationImage('cute sticker washi tape pastel'),
+      dealUrl: shopSearchUrl('https://shopee.vn/search?keyword=', 'sticker trang trí cute'),
+      tags: tx(['Cute', 'Dưới 50k', 'Hot'], ['Cute', 'Under 50k', 'Hot']),
+      categories: ['all', 'sticker', 'journaling', 'gift'],
+      flags: ['cute', 'hot', 'gift', 'under-50k', 'pastel'],
+    },
+    {
+      id: 'pencil-case',
+      name: tx('Hộp bút trong suốt', 'Clear pencil case'),
+      description: tx('Hộp bút nhìn được đồ bên trong, gọn gàng và rất dễ mix đồ.', 'A clear pencil case that keeps everything neat and easy to find.'),
+      price: '49.000đ',
+      priceValue: 49000,
+      source: 'TikTok Shop',
+      image: stationImage('clear pencil case stationery pastel'),
+      dealUrl: shopSearchUrl('https://www.tiktok.com/search?q=', 'clear pencil case stationery'),
+      tags: tx(['Hot', 'Dưới 50k', 'Best seller'], ['Hot', 'Under 50k', 'Best seller']),
+      categories: ['all', 'case', 'school', 'office'],
+      flags: ['hot', 'best', 'student', 'office', 'under-50k', 'under-100k'],
+    },
+    {
+      id: 'animal-clips',
+      name: tx('Kẹp giấy hình thú', 'Animal paper clips'),
+      description: tx('Kẹp giấy nhỏ xinh để giữ ghi chú và làm bàn học vui mắt hơn.', 'Tiny paper clips that hold notes and make the desk feel sweeter.'),
+      price: '22.000đ',
+      priceValue: 22000,
+      source: 'Shopee',
+      image: stationImage('cute paper clips stationery pastel'),
+      dealUrl: shopSearchUrl('https://shopee.vn/search?keyword=', 'kẹp giấy hình thú'),
+      tags: tx(['Cute', 'Dưới 50k', 'Hot'], ['Cute', 'Under 50k', 'Hot']),
+      categories: ['all', 'clip', 'study', 'gift'],
+      flags: ['cute', 'hot', 'gift', 'student', 'under-50k'],
+    },
+    {
+      id: 'weekly-note',
+      name: tx('Sổ note weekly pastel', 'Weekly pastel memo pad'),
+      description: tx('Tờ note chia tuần để ghi lịch trình, nhiệm vụ và việc cần nhớ nhanh.', 'Weekly memo sheets to capture schedules, tasks and reminders.'),
+      price: '69.000đ',
+      priceValue: 69000,
+      source: 'Lazada',
+      image: stationImage('weekly planner notebook pastel'),
+      dealUrl: shopSearchUrl('https://www.lazada.vn/catalog/?q=', 'weekly note pastel'),
+      tags: tx(['Best seller', 'Cute', 'Dưới 100k'], ['Best seller', 'Cute', 'Under 100k']),
+      categories: ['all', 'planner', 'study', 'office', 'combo'],
+      flags: ['best', 'cute', 'student', 'office', 'under-100k'],
+    },
+    {
+      id: 'washi-tape',
+      name: tx('Bộ washi tape', 'Washi tape set'),
+      description: tx('Cuộn washi tape giúp trang sổ và planner có thêm điểm nhấn mềm mại.', 'Washi rolls add soft decorative touches to pages and planners.'),
+      price: '45.000đ',
+      priceValue: 45000,
+      source: 'Shopee',
+      image: stationImage('washi tape pastel desk'),
+      dealUrl: shopSearchUrl('https://shopee.vn/search?keyword=', 'washi tape pastel'),
+      tags: tx(['Cute', 'Best seller', 'Dưới 100k'], ['Cute', 'Best seller', 'Under 100k']),
+      categories: ['all', 'sticker', 'journaling', 'gift'],
+      flags: ['cute', 'best', 'gift', 'pastel', 'under-50k', 'under-100k'],
+    },
+    {
+      id: 'organizer-tray',
+      name: tx('Khay đựng dụng cụ', 'Desk organizer tray'),
+      description: tx('Khay để gom bút, kẹp và sticker về một chỗ cho góc bàn gọn hơn.', 'A tray to keep pens, clips and stickers together in one neat place.'),
+      price: '89.000đ',
+      priceValue: 89000,
+      source: 'TikTok Shop',
+      image: stationImage('desk organizer pastel stationery'),
+      dealUrl: shopSearchUrl('https://www.tiktok.com/search?q=', 'desk organizer pastel stationery'),
+      tags: tx(['Hot', 'Best seller', 'Dành cho văn phòng'], ['Hot', 'Best seller', 'For office']),
+      categories: ['all', 'decor', 'office', 'study', 'combo'],
+      flags: ['hot', 'best', 'office', 'student', 'under-100k'],
+    },
+    {
+      id: 'gel-pen-set',
+      name: tx('Bút gel pastel', 'Pastel gel pens'),
+      description: tx('Set bút gel màu nhẹ, viết mượt và rất hợp với sổ ghi chép.', 'Smooth-writing gel pens in soft colors for notebooks and journaling.'),
+      price: '39.000đ',
+      priceValue: 39000,
+      source: 'Lazada',
+      image: stationImage('pastel gel pens notebook'),
+      dealUrl: shopSearchUrl('https://www.lazada.vn/catalog/?q=', 'bút gel pastel'),
+      tags: tx(['Cute', 'Dưới 50k', 'Pastel'], ['Cute', 'Under 50k', 'Pastel']),
+      categories: ['all', 'pen', 'study', 'school'],
+      flags: ['cute', 'pastel', 'student', 'under-50k'],
+    },
+    {
+      id: 'folder-a4',
+      name: tx('File folder A4', 'A4 file folder'),
+      description: tx('File folder giúp gom giấy tờ, tài liệu và bài tập lại cho ngăn nắp hơn.', 'A file folder keeps handouts, documents and assignments organized.'),
+      price: '59.000đ',
+      priceValue: 59000,
+      source: 'Shopee',
+      image: stationImage('a4 file folder pastel stationery'),
+      dealUrl: shopSearchUrl('https://shopee.vn/search?keyword=', 'file folder a4 pastel'),
+      tags: tx(['Best seller', 'Dành cho văn phòng', 'Dưới 100k'], ['Best seller', 'For office', 'Under 100k']),
+      categories: ['all', 'study', 'office', 'combo'],
+      flags: ['best', 'office', 'student', 'under-100k'],
+    },
+  ],
+  spotlightProducts: [],
+};
+stationeryPageData.spotlightProducts = stationeryPageData.products.slice(0, 5);
+
+const broadPageConfigs = {
   [routeForStationery()]: {
-    titleVi: 'Văn phòng phẩm',
-    titleEn: 'Stationery',
-    subtitleVi: 'Sổ tay, bút, sticker và những món xinh giúp việc học và làm việc vui hơn.',
-    subtitleEn: 'Notebooks, pens, stickers and cute tools that make study and work more enjoyable.',
-    heroImage: '/assets/bookshelf.jpg',
+    titleVi: 'Văn phòng phẩm xinh xắn cho góc học tập & làm việc',
+    titleEn: 'Cute stationery for study and work corners',
+    subtitleVi: stationeryPageData.seo.vi,
+    subtitleEn: stationeryPageData.seo.en,
+    heroImage: stationeryPageData.hero.image,
     accent: 'sand',
     emptyTitleVi: 'Chưa có món văn phòng phẩm nào ở đây.',
     emptyTitleEn: 'No stationery picks here yet.',
     emptyTextVi: 'Hãy ghé lại sau để xem thêm các món xinh cho góc học tập.',
     emptyTextEn: 'Come back later for more cute study essentials.',
-    items: affiliatePicks.filter((item) => item.route === routeForStationery()),
+    items: stationeryPageData.products.map((item) => ({
+      titleVi: item.name.vi,
+      titleEn: item.name.en,
+      descriptionVi: item.description.vi,
+      descriptionEn: item.description.en,
+      image: item.image,
+      route: item.dealUrl,
+    })),
   },
   [routeForAccessories()]: {
     titleVi: 'Phụ kiện',
@@ -911,7 +1205,7 @@ const broadPageConfigs = {
   },
 };
 
-const categorySeoMap = {
+const categorySeoMap: Record<string, any> = {
   'phong-ngu': {
     vi: { title: 'Decor phòng ngủ đẹp', description: 'Khám phá các ý tưởng decor phòng ngủ tông xanh da trời, dễ thương và phù hợp cho không gian nhỏ.' },
     en: { title: 'Beautiful bedroom decor ideas', description: 'Explore cute bedroom decor ideas that feel soft, bright, and easy to apply in small spaces.' },
@@ -958,7 +1252,7 @@ function extractPriceValue(value) {
 }
 
 function buildCategorySeo(categorySlug, lang, categoryPage) {
-  const seoCopy = categorySeoMap[categorySlug] || categorySeoMap.kham_pha;
+  const seoCopy = categorySeoMap[categorySlug] || categorySeoMap['kham-pha'];
   const pageName = seoCopy[lang].title;
   const description = compactText(categoryPage?.hero?.subtitle?.[lang] || seoCopy[lang].description);
   const pageUrl = toAbsoluteUrl(routeForCategory(categorySlug));
@@ -1130,8 +1424,8 @@ function buildProductsSeo(lang, products) {
   const title = lang === 'vi' ? 'Khám phá tất cả món xinh | Bì Bì' : 'Explore all cute picks | Bì Bì';
   const description =
     lang === 'vi'
-      ? 'Khám phá toàn bộ món xinh được Bì Bì tổng hợp từ decor, mỹ phẩm, văn phòng phẩm, phụ kiện và quà tặng.'
-      : 'Browse the cute picks curated by Bì Bì across decor, beauty, stationery, accessories and gifts.';
+      ? 'Khám phá toàn bộ món xinh được Bì Bì tổng hợp từ decor, văn phòng phẩm, phụ kiện và quà tặng.'
+      : 'Browse the cute picks curated by Bì Bì across decor, stationery, accessories and gifts.';
   const breadcrumbItems = [
     { name: lang === 'vi' ? 'Trang chủ' : 'Home', url: toAbsoluteUrl('/') },
     { name: lang === 'vi' ? 'Khám phá' : 'Explore', url: pageUrl },
@@ -1207,7 +1501,7 @@ function buildProductsSeo(lang, products) {
   };
 }
 
-function buildBroadPageSeo(path, lang, { robots, themeColor, titleOverride, descriptionOverride, pageType = 'website' } = {}) {
+function buildBroadPageSeo(path: string, lang: string, { robots, themeColor, titleOverride, descriptionOverride, pageType = 'website' }: any = {}) {
   const page = broadPageConfigs[path];
   if (!page) return buildHomeSeo();
 
@@ -1395,8 +1689,8 @@ function buildSearchSeo(lang, query, products) {
       ? `Tìm nhanh các gợi ý xinh xinh phù hợp với từ khóa “${normalizedQuery}” trên Bì Bì.`
       : `Quickly explore cute picks that match “${normalizedQuery}” on Bì Bì.`
     : lang === 'vi'
-      ? 'Tìm kiếm các món decor, mỹ phẩm, văn phòng phẩm, phụ kiện và quà tặng dễ thương.'
-      : 'Search cute decor, beauty, stationery, accessories and gift picks.';
+      ? 'Tìm kiếm các món decor, văn phòng phẩm, phụ kiện và quà tặng dễ thương.'
+      : 'Search cute decor, stationery, accessories and gift picks.';
   const matchedProducts = products.filter((item) => {
     if (!normalizedQuery) return true;
     const haystack = `${item.name} ${item.detail} ${item.price} ${item.shop} ${item.category}`.toLowerCase();
@@ -1497,6 +1791,10 @@ function App() {
   const [heroQuery, setHeroQuery] = useState('');
   const [pendingMascotTarget, setPendingMascotTarget] = useState(null);
   const [locationTick, setLocationTick] = useState(0);
+  const [activeShopRoomId, setActiveShopRoomId] = useState(null);
+  const [activeShopProductId, setActiveShopProductId] = useState(null);
+  const [previewShopProductId, setPreviewShopProductId] = useState(null);
+  const [rippleShopProductId, setRippleShopProductId] = useState(null);
   const [path, setPath] = useState(() => (typeof window === 'undefined' ? '/' : normalizePathname(window.location.pathname)));
   const heroSearchRef = useRef(null);
   const topbarSearchRef = useRef(null);
@@ -1507,6 +1805,7 @@ function App() {
   const isSearchPage = path === routeForSearch();
   const isDetailPage = path.startsWith('/idea/');
   const isCategoryPage = path.startsWith('/decor/');
+  const isStationeryPage = path === routeForStationery();
   const isDiscoverPage = path === routeForDiscover() || path === routeForProducts();
   const isFavoritesPage = path === routeForFavorites();
   const isNotFoundPage = path === routeForNotFound();
@@ -1520,7 +1819,24 @@ function App() {
   const categorySlug = getCategorySlugFromPath(path);
   const categoryPage = isDecorHome ? getIdeaCategoryPage('kham-pha') : isCategoryPage ? getIdeaCategoryPage(categorySlug || '') : null;
   const discoverCatalog = useMemo(() => buildDiscoverCatalog(lang), [lang]);
+  const shopLookRooms = useMemo(() => buildShopLookRooms(lang), [lang]);
+  const activeShopRoom = useMemo(() => shopLookRooms.find((room) => room.id === activeShopRoomId) || shopLookRooms[0], [activeShopRoomId, shopLookRooms]);
+  const activeShopProduct = useMemo(() => activeShopRoom?.products.find((product) => product.id === activeShopProductId) || activeShopRoom?.products[0] || null, [activeShopProductId, activeShopRoom]);
+  const previewShopProduct = useMemo(() => activeShopRoom?.products.find((product) => product.id === previewShopProductId) || null, [activeShopRoom, previewShopProductId]);
   const budgetIdeas = useMemo(() => getBudgetIdeas(lang), [lang]);
+  useEffect(() => {
+    if (!shopLookRooms.length) return;
+    if (!activeShopRoomId || !shopLookRooms.some((room) => room.id === activeShopRoomId)) {
+      setActiveShopRoomId(shopLookRooms[0].id);
+    }
+  }, [activeShopRoomId, shopLookRooms]);
+
+  useEffect(() => {
+    if (!activeShopRoom?.products.length) return;
+    if (!activeShopProductId || !activeShopRoom.products.some((product) => product.id === activeShopProductId)) {
+      setActiveShopProductId(activeShopRoom.products[0].id);
+    }
+  }, [activeShopProductId, activeShopRoom]);
   const isKnownPath =
     isHome ||
     isDecorHome ||
@@ -1545,6 +1861,7 @@ function App() {
     if (isHome) return buildHomeSeo();
     if (isDecorHome) return buildDecorSeo(lang);
     if (isCategoryPage) return buildCategorySeo(categorySlug || 'kham-pha', lang, categoryPage);
+    if (isStationeryPage) return buildBroadPageSeo(routeForStationery(), lang);
     if (isSearchPage) return buildSearchSeo(lang, currentSearchQuery, discoverCatalog);
     if (isDiscoverPage) return buildProductsSeo(lang, discoverCatalog);
     if (isFavoritesPage) return buildBroadPageSeo(path, lang, { robots: 'noindex,follow', titleOverride: lang === 'vi' ? 'Yêu thích | Bì Bì' : 'Saved | Bì Bì' });
@@ -1553,7 +1870,7 @@ function App() {
     if (isDetailPage) return buildIdeaSeo(currentIdea || ideas[0], lang);
     if (isNotFoundPage) return buildNotFoundSeo(lang, path);
     return buildNotFoundSeo(lang, path);
-  }, [budgetIdeas, categorySlug, categoryPage, currentIdea, currentSearchQuery, discoverCatalog, isBudgetPage, isCategoryPage, isDecorHome, isDiscoverPage, isFavoritesPage, isHome, isNotFoundPage, isSearchPage, lang, path]);
+  }, [budgetIdeas, categorySlug, categoryPage, currentIdea, currentSearchQuery, discoverCatalog, isBudgetPage, isCategoryPage, isDecorHome, isDiscoverPage, isFavoritesPage, isHome, isNotFoundPage, isSearchPage, isStationeryPage, lang, path]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1676,6 +1993,25 @@ function App() {
     navigate('/');
   };
 
+  const handleShopRoomSwitch = (roomId) => {
+    setActiveShopRoomId(roomId);
+    setActiveShopProductId(null);
+    setPreviewShopProductId(null);
+    setRippleShopProductId(null);
+  };
+
+  const handleShopHotspotSelect = (productId) => {
+    setActiveShopProductId(productId);
+    setPreviewShopProductId(productId);
+    setRippleShopProductId(productId);
+    window.setTimeout(() => setRippleShopProductId((current) => (current === productId ? null : current)), 400);
+  };
+
+  const handleShopProductActivate = (productId) => {
+    setActiveShopProductId(productId);
+    setPreviewShopProductId(productId);
+  };
+
   return (
     <div className="app-shell">
       <Header
@@ -1697,32 +2033,58 @@ function App() {
         onOpenSaved={() => navigate(routeForFavorites())}
       />
 
-      <main className={`page-shell ${isCategoryPage ? 'page-shell--idea' : ''}`}>
+      <main className={`page-shell ${isCategoryPage ? 'page-shell--idea' : ''} ${isStationeryPage ? 'page-shell--stationery' : ''}`}>
         <div className="ambient ambient-left" />
         <div className="ambient ambient-right" />
 
         {isHome ? (
-          <HomePage
-            content={content}
-            lang={lang}
-            ideas={ideas}
-            categories={categories}
-            picks={affiliatePicks}
-            heroQuery={heroQuery}
-            searchRef={heroSearchRef}
-            onHeroQueryChange={setHeroQuery}
-            onSearchSubmit={submitSearch}
-            onOpenIdea={(slug) => navigate(routeForIdea(slug))}
-            onOpenCategory={(route) => navigate(route)}
-            onOpenBudget={(slug) => navigate(routeForBudget(slug))}
-            onOpenPick={(route) => navigate(route)}
-          />
+          <>
+            <HomePage
+              content={content}
+              lang={lang}
+              ideas={ideas}
+              categories={categories}
+              picks={affiliatePicks}
+              heroQuery={heroQuery}
+              searchRef={heroSearchRef}
+              onHeroQueryChange={setHeroQuery}
+              onSearchSubmit={submitSearch}
+              onOpenIdea={(slug) => navigate(routeForIdea(slug))}
+              onOpenCategory={(route) => navigate(route)}
+              onOpenBudget={(slug) => navigate(routeForBudget(slug))}
+              onOpenPick={(route) => navigate(route)}
+              shopLookSection={
+                <ShopTheLookSection
+                  lang={lang}
+                  rooms={shopLookRooms}
+                  activeRoom={activeShopRoom}
+                  activeProduct={activeShopProduct}
+                  previewProduct={previewShopProduct}
+                  selectedProductId={activeShopProduct?.id || null}
+                  rippleProductId={rippleShopProductId}
+                  onRoomSwitch={handleShopRoomSwitch}
+                  onHotspotSelect={handleShopHotspotSelect}
+                  onProductActivate={handleShopProductActivate}
+                  onProductHover={setPreviewShopProductId}
+                  onClearProductHover={() => setPreviewShopProductId(null)}
+                  onClosePreview={() => setPreviewShopProductId(null)}
+                />
+              }
+            />
+          </>
         ) : isDecorHome || isCategoryPage ? (
           <IdeaCategoryPage
             content={content}
             lang={lang}
             page={categoryPage || getIdeaCategoryPage('kham-pha')}
             onOpenIdea={(slug) => navigate(routeForIdea(slug))}
+          />
+        ) : isStationeryPage ? (
+          <StationeryPage
+            content={content}
+            lang={lang}
+            pageData={stationeryPageData}
+            onOpenRoute={(route) => navigate(route)}
           />
         ) : isSearchPage ? (
           <ProductListPage

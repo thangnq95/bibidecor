@@ -1,12 +1,35 @@
-export function Icon({ name }) {
-  const common = {
+import type { SVGProps } from 'react';
+
+type IconName =
+  | 'search'
+  | 'menu'
+  | 'heart'
+  | 'profile'
+  | 'bell'
+  | 'home'
+  | 'plus'
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'share'
+  | 'bookmark'
+  | 'sparkle'
+  | 'cart'
+  | 'wishlist'
+  | 'arrow-up-right'
+  | 'close'
+  | 'instagram'
+  | 'facebook'
+  | 'tiktok';
+
+export function Icon({ name }: { name: IconName }) {
+  const common: SVGProps<SVGSVGElement> = {
     fill: 'none',
     stroke: 'currentColor',
     strokeWidth: '1.9',
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     viewBox: '0 0 24 24',
-    'aria-hidden': 'true',
+    'aria-hidden': true,
   };
 
   switch (name) {
@@ -27,7 +50,7 @@ export function Icon({ name }) {
       );
     case 'heart':
       return (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden={true}>
           <path
             d="M12 21.35 10.55 20C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.5L12 21.35Z"
             fill="currentColor"
@@ -76,7 +99,7 @@ export function Icon({ name }) {
       );
     case 'share':
       return (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden={true}>
           <path
             d="M17 3a4 4 0 1 0 0 8 3.97 3.97 0 0 0 2.21-.67l-7.48 4.24A4.01 4.01 0 0 0 8 13.1a4 4 0 1 0 0 7.9 4.01 4.01 0 0 0 3.73-2.53l7.49 4.23A4 4 0 1 0 20 20a3.97 3.97 0 0 0-2.21.67l-7.49-4.23A4.01 4.01 0 0 0 12 12c0-.15-.01-.3-.03-.45l7.49-4.24A4 4 0 0 0 20 7a4 4 0 0 0-3-4Z"
             fill="none"
@@ -122,7 +145,7 @@ export function Icon({ name }) {
       );
     case 'instagram':
       return (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden={true}>
           <rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" strokeWidth="1.8" />
           <circle cx="12" cy="12" r="3.8" fill="none" stroke="currentColor" strokeWidth="1.8" />
           <circle cx="17.2" cy="6.8" r="1.2" fill="currentColor" />
@@ -130,7 +153,7 @@ export function Icon({ name }) {
       );
     case 'facebook':
       return (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden={true}>
           <path
             d="M14.5 7.5H17V4h-2.5C11.9 4 10 5.9 10 8.5V11H7v3h3v6h3v-6h3l.7-3H13v-2.5c0-.6.4-1 1-1Z"
             fill="currentColor"
@@ -139,7 +162,7 @@ export function Icon({ name }) {
       );
     case 'tiktok':
       return (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden={true}>
           <path
             d="M15.8 3c.4 2.7 2.1 4.5 4.7 4.7v3.2c-1.6.1-3.1-.4-4.7-1.2v5.7c0 3.4-2.7 6.2-6 6.2s-6-2.7-6-6 2.7-6 6-6c.4 0 .8 0 1.2.1v3.4c-.4-.1-.8-.2-1.2-.2-1.5 0-2.8 1.2-2.8 2.7 0 1.6 1.3 2.9 2.8 2.9 1.7 0 3-1.4 3-3.1V3h3Z"
             fill="currentColor"

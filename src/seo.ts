@@ -15,7 +15,7 @@ export function toAbsoluteUrl(path, origin = getSiteOrigin()) {
   return new URL(path.startsWith('/') ? path : `/${path}`, origin).toString();
 }
 
-function upsertMeta(head, attrs, content) {
+function upsertMeta(head: Document['head'], attrs: Record<string, string>, content?: string) {
   const selector = Object.entries(attrs)
     .map(([key, value]) => `[${key}="${String(value).replace(/"/g, '\\"')}"]`)
     .join('');
@@ -32,7 +32,7 @@ function upsertMeta(head, attrs, content) {
   return element;
 }
 
-function upsertLink(head, attrs) {
+function upsertLink(head: Document['head'], attrs: Record<string, string>) {
   const selector = Object.entries(attrs)
     .map(([key, value]) => `[${key}="${String(value).replace(/"/g, '\\"')}"]`)
     .join('');
@@ -46,7 +46,7 @@ function upsertLink(head, attrs) {
   return element;
 }
 
-function upsertScript(head, attrs, json) {
+function upsertScript(head: Document['head'], attrs: Record<string, string>, json: any) {
   const element = document.createElement('script');
   Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
   element.textContent = JSON.stringify(json);
@@ -55,8 +55,8 @@ function upsertScript(head, attrs, json) {
   return element;
 }
 
-export function createWebSiteSchema({ pageUrl, description, searchUrl }) {
-  const schema = {
+export function createWebSiteSchema({ pageUrl, description, searchUrl }: any): any {
+  const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
@@ -75,7 +75,7 @@ export function createWebSiteSchema({ pageUrl, description, searchUrl }) {
   return schema;
 }
 
-export function createOrganizationSchema({ pageUrl, logoUrl, description }) {
+export function createOrganizationSchema({ pageUrl, logoUrl, description }: any): any {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -86,7 +86,7 @@ export function createOrganizationSchema({ pageUrl, logoUrl, description }) {
   };
 }
 
-export function createLogoSchema({ logoUrl, pageUrl, caption = SITE_NAME }) {
+export function createLogoSchema({ logoUrl, pageUrl, caption = SITE_NAME }: any): any {
   return {
     '@context': 'https://schema.org',
     '@type': 'ImageObject',
@@ -97,7 +97,7 @@ export function createLogoSchema({ logoUrl, pageUrl, caption = SITE_NAME }) {
   };
 }
 
-export function createImageObjectSchema({ imageUrl, pageUrl, caption, name }) {
+export function createImageObjectSchema({ imageUrl, pageUrl, caption, name }: any): any {
   return {
     '@context': 'https://schema.org',
     '@type': 'ImageObject',
@@ -108,7 +108,7 @@ export function createImageObjectSchema({ imageUrl, pageUrl, caption, name }) {
   };
 }
 
-export function createBreadcrumbSchema(items) {
+export function createBreadcrumbSchema(items: any[]): any {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -121,8 +121,8 @@ export function createBreadcrumbSchema(items) {
   };
 }
 
-export function createWebPageSchema({ name, description, pageUrl, imageUrl, breadcrumbItems, isPartOf }) {
-  const schema = {
+export function createWebPageSchema({ name, description, pageUrl, imageUrl, breadcrumbItems, isPartOf }: any): any {
+  const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name,
@@ -149,7 +149,7 @@ export function createWebPageSchema({ name, description, pageUrl, imageUrl, brea
   return schema;
 }
 
-export function createCollectionPageSchema({ name, description, pageUrl, items, imageUrl }) {
+export function createCollectionPageSchema({ name, description, pageUrl, items, imageUrl }: any): any {
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -184,11 +184,11 @@ export function createCollectionPageSchema({ name, description, pageUrl, items, 
   };
 }
 
-export function createItemListSchema({ name, description, pageUrl, items, imageUrl }) {
+export function createItemListSchema({ name, description, pageUrl, items, imageUrl }: any): any {
   return createCollectionPageSchema({ name, description, pageUrl, items, imageUrl });
 }
 
-export function createArticleSchema({ name, description, pageUrl, imageUrl, breadcrumbItems }) {
+export function createArticleSchema({ name, description, pageUrl, imageUrl, breadcrumbItems }: any): any {
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -208,8 +208,8 @@ export function createArticleSchema({ name, description, pageUrl, imageUrl, brea
   };
 }
 
-export function createProductSchema({ name, description, pageUrl, imageUrl, brand, price, priceCurrency = 'VND', availability, sku }) {
-  const schema = {
+export function createProductSchema({ name, description, pageUrl, imageUrl, brand, price, priceCurrency = 'VND', availability, sku }: any): any {
+  const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name,
@@ -233,7 +233,7 @@ export function createProductSchema({ name, description, pageUrl, imageUrl, bran
   return schema;
 }
 
-export function createFAQSchema(items = []) {
+export function createFAQSchema(items: any[] = []): any {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -248,8 +248,8 @@ export function createFAQSchema(items = []) {
   };
 }
 
-export function createPersonSchema({ name, pageUrl, imageUrl, jobTitle, description }) {
-  const schema = {
+export function createPersonSchema({ name, pageUrl, imageUrl, jobTitle, description }: any): any {
+  const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'Person',
     name,
@@ -276,7 +276,7 @@ export function applySeoMetadata({
   robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
   themeColor = '#b6d6ff',
   language = 'vi-VN',
-}) {
+}: any) {
   if (typeof document === 'undefined') return;
 
   const head = document.head;

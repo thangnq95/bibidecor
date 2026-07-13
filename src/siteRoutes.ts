@@ -13,7 +13,6 @@ export const budgetSlugs = ['under-300k', '300k-500k', '500k-1m', '1m-2m', '2m-5
 
 export const broadPageRoutes = {
   decor: '/decor',
-  beauty: '/beauty',
   stationery: '/stationery',
   accessories: '/accessories',
   gifts: '/gifts',
@@ -32,7 +31,6 @@ export const ideaSlugs = [
 
 export const routeForCategory = (slug) => `/decor/${slug}`;
 export const routeForDecorHome = () => broadPageRoutes.decor;
-export const routeForBeauty = () => broadPageRoutes.beauty;
 export const routeForStationery = () => broadPageRoutes.stationery;
 export const routeForAccessories = () => broadPageRoutes.accessories;
 export const routeForGifts = () => broadPageRoutes.gifts;
@@ -47,7 +45,6 @@ export const routeForBudget = (slug) => `/budget/${slug}`;
 export const indexableSeoRoutes = [
   '/',
   routeForDecorHome(),
-  routeForBeauty(),
   routeForStationery(),
   routeForAccessories(),
   routeForGifts(),

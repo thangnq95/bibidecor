@@ -10,8 +10,8 @@ export function FloatingMascot({
   dismissLabel = 'Hide suggestion',
   closeLabel = 'Close assistant',
   onAction,
-}) {
-  const rootRef = useRef(null);
+}: any) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -76,14 +76,15 @@ export function FloatingMascot({
   useEffect(() => {
     if (!menuOpen) return undefined;
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMenuOpen(false);
       }
     };
 
-    const handlePointerDown = (event) => {
-      if (rootRef.current && !rootRef.current.contains(event.target)) {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (rootRef.current && target && !rootRef.current.contains(target)) {
         setMenuOpen(false);
       }
     };

@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { budgetOptions, filterBudgetIdeas, getBudgetOption, getIdeaCategoryPage } from '../categoryIdeas';
 import {
   routeForAccessories,
-  routeForBeauty,
   routeForBudget,
   routeForCategory,
   routeForDecorHome,
@@ -60,14 +59,6 @@ export function buildBudgetSeoCopy(option, lang) {
   return `The ${option.label.en.toLowerCase()} budget collection helps you move from a spending limit to practical decor ideas that are easy to use. Bì Bì prioritizes ideas with clear estimated costs, all wrapped in a soft pastel feel that works for both small and spacious rooms. You can scan each card to compare the investment, item count, and open the detail page whenever you want a closer look. It is a simple way to find a room setup that feels cute, balanced, and friendly to your budget.`;
 }
 
-export function buildProductListSeoCopy(lang) {
-  if (lang === 'vi') {
-    return 'Trang khám phá của Bì Bì gom những món xinh từ nhiều danh mục khác nhau để bạn duyệt nhanh hơn mà không phải nhảy qua quá nhiều trang. Các thẻ nội dung được sắp xếp theo hướng dễ đọc, dễ lưu và dễ mở sang nơi mua khi bạn đã chọn được món hợp gu. Từ decor, mỹ phẩm, văn phòng phẩm đến phụ kiện và quà tặng, mỗi gợi ý đều được chọn để giữ đúng tinh thần dễ thương, sáng sủa và mềm mại của thương hiệu Bì Bì. Nếu bạn đang tìm một nơi tổng hợp nhẹ nhàng thay vì một cửa hàng trực tuyến thông thường, đây chính là điểm bắt đầu rất phù hợp.';
-  }
-
-  return 'The discover page brings together cute picks from multiple categories so you can browse faster without jumping between too many pages. The cards are arranged to stay easy to scan, easy to save, and easy to open on the shop side once you are ready to buy. From decor and beauty to stationery, accessories and gifts, every pick is curated to keep the soft, bright, and adorable Bì Bì vibe. If you want a gentle affiliate discovery space instead of a traditional storefront, this is a great place to begin.';
-}
-
 export function buildCategorySeoCopy(page, lang) {
   const title = page?.hero?.title?.[lang] || '';
   const subtitle = compactText(page?.hero?.subtitle?.[lang] || '');
@@ -80,7 +71,188 @@ export function buildCategorySeoCopy(page, lang) {
   return `Bì Bì curates ${title.toLowerCase()} ideas to keep the mood soft, bright, and adorable. From the featured inspiration to the smaller cards below, every setup is designed to feel easy to save, easy to adapt, and friendly for everyday spaces. ${subtitle} With ${totalCards} different ideas, you can browse, save, or open any card when you want a little more inspiration for your room.`;
 }
 
-export function buildCollectionSeoCopy(page, lang) {
+function extractProductPriceValue(value) {
+  const digits = String(value || '').replace(/[^\d]/g, '');
+  return digits ? Number(digits) : null;
+}
+
+function buildProductSearchQuery(lang, key) {
+  const queries = {
+    all: '',
+    trending: '',
+    newest: '',
+    decor: lang === 'vi' ? 'decor' : 'decor',
+    stationery: lang === 'vi' ? 'văn phòng phẩm' : 'stationery',
+    accessories: lang === 'vi' ? 'phụ kiện' : 'accessories',
+    gifts: lang === 'vi' ? 'quà tặng' : 'gifts',
+    cute: lang === 'vi' ? 'cute' : 'cute',
+    budget: lang === 'vi' ? '100k' : '100k',
+    bibi: lang === 'vi' ? 'bì bì' : 'cute picks',
+  };
+
+  return queries[key] || '';
+}
+
+function uniqueProducts(products) {
+  const seen = new Set();
+  return products.filter((product) => {
+    if (!product || seen.has(product.id)) return false;
+    seen.add(product.id);
+    return true;
+  });
+}
+
+function buildSectionItems(products: any[], terms: string[], limit: number, options: any = {}) {
+  const base = [...products].sort((left, right) => {
+    const leftPrice = extractProductPriceValue(left.price) ?? Number.MAX_SAFE_INTEGER;
+    const rightPrice = extractProductPriceValue(right.price) ?? Number.MAX_SAFE_INTEGER;
+    if (options.order === 'newest') {
+      return (right.orderIndex ?? 0) - (left.orderIndex ?? 0) || leftPrice - rightPrice;
+    }
+    return (left.orderIndex ?? 0) - (right.orderIndex ?? 0) || leftPrice - rightPrice;
+  });
+
+  const ranked = base
+    .map((product) => {
+      const haystack = `${product.name} ${product.detail} ${product.price} ${product.shop} ${product.category} ${product.categoryLabel}`.toLowerCase();
+      const score = terms.reduce((total, term) => total + (haystack.includes(term) ? 1 : 0), 0);
+      return { product, score };
+    })
+    .sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score;
+      const leftPrice = extractProductPriceValue(left.product.price) ?? Number.MAX_SAFE_INTEGER;
+      const rightPrice = extractProductPriceValue(right.product.price) ?? Number.MAX_SAFE_INTEGER;
+      if (options.order === 'newest') {
+        return (right.product.orderIndex ?? 0) - (left.product.orderIndex ?? 0) || leftPrice - rightPrice;
+      }
+      return (left.product.orderIndex ?? 0) - (right.product.orderIndex ?? 0) || leftPrice - rightPrice;
+    })
+    .map(({ product }) => product);
+
+  const fallback = base.filter((product) => !ranked.some((candidate) => candidate.id === product.id));
+  return uniqueProducts([...ranked, ...fallback]).slice(0, limit);
+}
+
+function buildDiscoverSections(products, lang) {
+  const under100k = lang === 'vi' ? 'dưới 100k' : 'under 100k';
+  const budgetProducts = products.filter((product) => {
+    const price = extractProductPriceValue(product.price);
+    return price != null && price <= 100000;
+  });
+  return [
+    {
+      id: 'trending',
+      title: lang === 'vi' ? 'Đang được yêu thích' : 'Popular now',
+      description: lang === 'vi' ? 'Những món dễ lưu, dễ phối và rất hợp vibe Bì Bì.' : 'A soft mix of easy-to-save picks that fit the Bì Bì vibe.',
+      action: buildProductSearchQuery(lang, 'all'),
+      items: buildSectionItems(products, ['cute', 'pastel', 'decor', 'phụ kiện', 'stationery', 'quà'], 5),
+    },
+    {
+      id: 'newest',
+      title: lang === 'vi' ? 'Mới cập nhật' : 'Fresh finds',
+      description: lang === 'vi' ? 'Các gợi ý vừa được gom lại để bạn xem nhanh hơn.' : 'Recently added picks gathered into one soft shelf.',
+      action: buildProductSearchQuery(lang, 'newest'),
+      items: buildSectionItems(products, ['mới', 'new', 'fresh'], 5, { order: 'newest' }),
+    },
+    {
+      id: 'decor',
+      title: lang === 'vi' ? 'Decor nổi bật' : 'Decor highlights',
+      description: lang === 'vi' ? 'Những món làm góc phòng mềm hơn, xinh hơn.' : 'Cute accents that make a room feel softer and brighter.',
+      action: buildProductSearchQuery(lang, 'decor'),
+      items: buildSectionItems(products, ['decor', 'trang trí', 'room', 'candle'], 5),
+    },
+    {
+      id: 'stationery',
+      title: lang === 'vi' ? 'Văn phòng phẩm đáng mua' : 'Stationery picks',
+      description: lang === 'vi' ? 'Sổ tay, bút, sticker và vài món nhỏ rất dễ yêu.' : 'Notebooks, pens, stickers and tiny tools worth saving.',
+      action: buildProductSearchQuery(lang, 'stationery'),
+      items: buildSectionItems(products, ['văn phòng phẩm', 'stationery', 'notebook', 'sổ', 'bút', 'sticker'], 5),
+    },
+    {
+      id: 'accessories',
+      title: lang === 'vi' ? 'Phụ kiện nổi bật' : 'Accessory highlights',
+      description: lang === 'vi' ? 'Túi, kẹp tóc, và chi tiết nhỏ làm outfit sáng hơn.' : 'Bags, clips and tiny accents that brighten an outfit.',
+      action: buildProductSearchQuery(lang, 'accessories'),
+      items: buildSectionItems(products, ['phụ kiện', 'accessories', 'tote', 'clip', 'kẹp', 'bag'], 5),
+    },
+    {
+      id: 'gifts',
+      title: lang === 'vi' ? 'Quà tặng dưới 100k' : 'Gifts under 100k',
+      description: lang === 'vi' ? 'Những món nhỏ xinh, dễ chọn và dễ tặng.' : 'Small gifts that feel cute, easy and thoughtful.',
+      action: buildProductSearchQuery(lang, 'budget'),
+      items: buildSectionItems(budgetProducts.length ? budgetProducts : products, ['100k', '99', '79', '58', under100k, 'quà'], 5),
+    },
+    {
+      id: 'cute',
+      title: lang === 'vi' ? 'Cute Picks' : 'Cute Picks',
+      description: lang === 'vi' ? 'Tông pastel, nhẹ nhàng và rất hợp để lưu lại.' : 'Soft pastel picks that are easy to save for later.',
+      action: buildProductSearchQuery(lang, 'cute'),
+      items: buildSectionItems(products, ['cute', 'pastel', 'cloud', 'soft', 'mây'], 5),
+    },
+    {
+      id: 'bibi',
+      title: lang === 'vi' ? 'Bì Bì gợi ý' : 'Bì Bì picks',
+      description: lang === 'vi' ? 'Một nhóm món cân bằng giữa xinh, tiện và dễ mua.' : 'A balanced mix of cute, practical and easy-to-buy picks.',
+      action: buildProductSearchQuery(lang, 'bibi'),
+      items: buildSectionItems(products, ['bì bì', 'cute', 'decor', 'stationery', 'phụ kiện', 'quà'], 5, { order: 'newest' }),
+    },
+  ].map((section) => ({
+    ...section,
+    items: uniqueProducts(section.items),
+  }));
+}
+
+function GalleryProductCard({ lang, product, onOpenItem, variant = 'grid' }: any) {
+  const [imageReady, setImageReady] = useState(false);
+  const compact = variant === 'shelf';
+  const categoryLabel = product.categoryLabel || product.category;
+  const cardClassName = `product-card glass ${variant === 'shelf' ? 'product-card--shelf' : 'product-card--search'}`;
+
+  return (
+    <article className={cardClassName}>
+      <button
+        type="button"
+        className="product-card__main"
+        onClick={() => onOpenItem(product.route)}
+        aria-label={`${product.name} - ${lang === 'vi' ? 'Mở chi tiết sản phẩm' : 'Open product details'}`}
+      >
+        <div className="product-card__media">
+          <div className={`product-card__media-frame ${imageReady ? 'is-loaded' : ''}`}>
+            {!imageReady && <span className="product-card__skeleton" aria-hidden="true" />}
+            <img
+              src={product.image}
+              alt={product.name}
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setImageReady(true)}
+              onError={() => setImageReady(true)}
+            />
+          </div>
+          <span className="product-card__theme">{categoryLabel}</span>
+        </div>
+
+        <div className="product-card__body">
+          <div className="product-card__head">
+            <h3>{product.name}</h3>
+            {!compact && product.detail ? <p>{product.detail}</p> : null}
+          </div>
+
+          <div className="product-card__meta">
+            <strong>{product.price}</strong>
+            <span>{product.shop}</span>
+          </div>
+
+          <div className="product-card__footer">
+            <span className="product-card__tag">{categoryLabel}</span>
+            <span className="product-card__cta">{lang === 'vi' ? 'Xem sản phẩm →' : 'View item →'}</span>
+          </div>
+        </div>
+      </button>
+    </article>
+  );
+}
+
+export function buildCollectionSeoCopy(page: any, lang: 'vi' | 'en' | string) {
   const title = page?.titleVi || page?.titleEn || '';
   const subtitle = compactText(page?.subtitleVi || page?.subtitleEn || '');
   const totalItems = page?.items?.length || 0;
@@ -98,6 +270,7 @@ export function HomePage({
   ideas = [],
   categories = [],
   picks = [],
+  shopLookSection,
   heroQuery,
   searchRef,
   onHeroQueryChange,
@@ -106,7 +279,7 @@ export function HomePage({
   onOpenCategory,
   onOpenBudget,
   onOpenPick,
-}) {
+}: any) {
   const todayPicks = picks.slice(0, 6);
   const featuredIdeas = ideas.slice(0, 4);
 
@@ -171,11 +344,62 @@ export function HomePage({
         </div>
       </section>
 
+      <section className="home-today glass home-section-anchor" id="home-today">
+        <div className="home-today__head">
+          <div>
+            <h2>{lang === 'vi' ? 'Gợi ý hôm nay' : 'Today suggestions'}</h2>
+            <p>{lang === 'vi' ? 'Một vài món xinh và ý tưởng đang hợp mood để bạn xem nhanh.' : 'A few cute picks and ideas that match today’s mood.'}</p>
+          </div>
+
+          <div className="home-today__actions">
+            <button type="button" className="section-link section-link--soft" onClick={() => onOpenBudget(routeForBudget('300k-500k'))}>
+              {lang === 'vi' ? 'Xem theo ngân sách' : 'Browse by budget'}
+            </button>
+            <button type="button" className="section-link" onClick={() => onOpenPick(routeForDiscover())}>
+              {lang === 'vi' ? 'Xem tất cả' : 'View all'}
+            </button>
+          </div>
+        </div>
+
+        <div className="home-today__grid">
+          <div className="home-today__featured">
+            {featuredIdeas.map((idea, index) => {
+              const meta = idea.meta[lang];
+              return (
+                <button key={idea.slug} type="button" className={`home-today-card home-today-card--featured home-today-card--${idea.accent}`} onClick={() => onOpenIdea(idea.slug)}>
+                  <span className="home-today-card__index">0{index + 1}</span>
+                  <img src={idea.image} alt={meta.title} loading="lazy" decoding="async" />
+                  <span className="home-today-card__body">
+                    <strong>{meta.title}</strong>
+                    <span>{meta.subtitle}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="home-today__picks">
+            {todayPicks.map((pick, index) => (
+              <button key={pick.id} type="button" className="home-mini-pick" onClick={() => onOpenPick(pick.route)}>
+                <span className="home-mini-pick__index">{index + 1}</span>
+                <img src={pick.image} alt={lang === 'vi' ? pick.titleVi : pick.titleEn} loading="lazy" decoding="async" />
+                <span className="home-mini-pick__copy">
+                  <strong>{lang === 'vi' ? pick.titleVi : pick.titleEn}</strong>
+                  <span>{lang === 'vi' ? pick.descriptionVi : pick.descriptionEn}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {shopLookSection ? <div className="home-shop-look-wrap home-section-anchor">{shopLookSection}</div> : null}
+
     </div>
   );
 }
 
-export function CollectionLandingPage({ content, lang, page, onOpenItem, onOpenExplore }) {
+export function CollectionLandingPage({ content, lang, page, onOpenItem, onOpenExplore }: any) {
   const pageTitle = lang === 'vi' ? page.titleVi : page.titleEn;
   const pageSubtitle = lang === 'vi' ? page.subtitleVi : page.subtitleEn;
   const pageItems = page.items || [];
@@ -187,7 +411,7 @@ export function CollectionLandingPage({ content, lang, page, onOpenItem, onOpenE
     <div className="page-content page-content--collection">
       <section
         className={`collection-hero glass collection-hero--${page.accent || 'blue'}`}
-        style={{ '--collection-hero-image': `url(${toAbsoluteUrl(heroImage)})` }}
+        style={{ '--collection-hero-image': `url(${toAbsoluteUrl(heroImage)})` } as CSSProperties & Record<string, string>}
       >
         <div className="decor-layer decor-layer--hero" aria-hidden="true">
           <span className="decor-cloud decor-cloud--far decor-cloud--1" />
@@ -210,7 +434,7 @@ export function CollectionLandingPage({ content, lang, page, onOpenItem, onOpenE
       {pageItems.length ? (
         <section className="collection-grid">
           {pageItems.map((item, index) => (
-            <HomePickCard key={item.id} pick={item} lang={lang} index={index} onOpenPick={onOpenItem} />
+            <GalleryProductCard key={item.id} lang={lang} product={item} onOpenItem={onOpenItem} variant="grid" />
           ))}
         </section>
       ) : (
@@ -234,7 +458,330 @@ export function CollectionLandingPage({ content, lang, page, onOpenItem, onOpenE
   );
 }
 
-export function BudgetPage({ content, lang, budgetSlug, ideas, onOpenIdea, onOpenBudget }) {
+function stationeryMatchesFilter(product: any, filterId: string) {
+  if (filterId === 'all') return true;
+  if (filterId === 'under-50k') return (product.priceValue || 0) < 50000;
+  if (filterId === 'under-100k') return (product.priceValue || 0) < 100000;
+  const flags = product.flags || [];
+  return flags.includes(filterId);
+}
+
+function stationeryMatchesCategory(product: any, categoryId: string) {
+  if (categoryId === 'all') return true;
+  return (product.categories || []).includes(categoryId);
+}
+
+function StationeryProductCard({ lang, product, saved, onToggleSave, onOpenDeal, variant = 'grid' }: any) {
+  const tags = product.tags?.[lang] || [];
+  const productName = product.name?.[lang] || product.name || '';
+
+  return (
+    <article className={`stationery-product-card glass stationery-product-card--${variant}`}>
+      <button
+        type="button"
+        className="stationery-product-card__save"
+        aria-pressed={saved}
+        aria-label={lang === 'vi' ? 'Lưu yêu thích' : 'Save to wishlist'}
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggleSave(product.id);
+        }}
+      >
+        <Icon name="heart" />
+      </button>
+
+      <button
+        type="button"
+        className="stationery-product-card__main"
+        onClick={() => onOpenDeal(product.dealUrl)}
+        aria-label={`${lang === 'vi' ? 'Mở sản phẩm' : 'Open product'}: ${productName}`}
+      >
+        <div className="stationery-product-card__media">
+          <img src={product.image} alt={productName} loading="lazy" decoding="async" />
+        </div>
+
+        <div className="stationery-product-card__body">
+          <div className="stationery-product-card__tags">
+            {tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="stationery-product-card__tag">
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          <h3>{productName}</h3>
+
+          <div className="stationery-product-card__meta">
+            <strong>{product.price}</strong>
+            <span>{product.source}</span>
+          </div>
+
+          <span className="stationery-product-card__cta">{lang === 'vi' ? 'Xem sản phẩm' : 'View product'}</span>
+        </div>
+      </button>
+    </article>
+  );
+}
+
+function StationeryNeedCard({ lang, item, onOpenRoute }: any) {
+  return (
+    <button type="button" className="stationery-need-card glass" onClick={() => onOpenRoute(item.route)}>
+      <span className="stationery-need-card__icon" aria-hidden="true">
+        {item.icon}
+      </span>
+      <div className="stationery-need-card__copy">
+        <h3>{item.title[lang]}</h3>
+        <p>{item.description[lang]}</p>
+      </div>
+    </button>
+  );
+}
+
+function StationeryVibeCard({ lang, item, onOpenRoute }: any) {
+  return (
+    <article className="stationery-vibe-card glass">
+      <img src={item.image} alt={item.title[lang]} loading="lazy" decoding="async" />
+      <div className="stationery-vibe-card__body">
+        <h3>{item.title[lang]}</h3>
+        <p>{item.description[lang]}</p>
+        <button type="button" className="section-link section-link--soft" onClick={() => onOpenRoute(item.route)}>
+          {item.cta[lang]}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+export function StationeryPage({ content, lang, pageData, onOpenRoute }: any) {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [savedIds, setSavedIds] = useState(() => new Set());
+  const productsRef = useRef(null);
+
+  const heroTitle = pageData.hero.title[lang];
+  const heroSubtitle = pageData.hero.subtitle[lang];
+  const heroCta = pageData.hero.cta[lang];
+  const seoText = pageData.seo[lang];
+
+  const visibleProducts = useMemo(
+    () =>
+      pageData.products.filter(
+        (product) => stationeryMatchesCategory(product, activeCategory) && stationeryMatchesFilter(product, activeFilter),
+      ),
+    [activeCategory, activeFilter, pageData.products],
+  );
+
+  const spotlightProducts = useMemo(() => pageData.spotlightProducts || pageData.products.slice(0, 5), [pageData.products, pageData.spotlightProducts]);
+
+  const toggleSaved = (productId) => {
+    setSavedIds((current) => {
+      const next = new Set(current);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else {
+        next.add(productId);
+      }
+      return next;
+    });
+  };
+
+  const scrollToProducts = () => {
+    productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const setCategory = (categoryId) => {
+    setActiveCategory(categoryId);
+    window.requestAnimationFrame(scrollToProducts);
+  };
+
+  const setFilter = (filterId) => {
+    setActiveFilter(filterId);
+    window.requestAnimationFrame(scrollToProducts);
+  };
+
+  return (
+    <div className="page-content page-content--stationery">
+      <section
+        className="stationery-hero glass"
+        style={{ '--stationery-hero-image': `url(${pageData.hero.image})` } as CSSProperties & Record<string, string>}
+      >
+        <div className="decor-layer decor-layer--hero stationery-hero__decor" aria-hidden="true">
+          <span className="decor-cloud decor-cloud--far decor-cloud--1" />
+          <span className="decor-cloud decor-cloud--near decor-cloud--3" />
+          <span className="decor-sparkle decor-sparkle--1" />
+          <span className="decor-sparkle decor-sparkle--2" />
+          <span className="decor-sparkle decor-sparkle--3" />
+        </div>
+
+        <div className="stationery-hero__copy">
+          <span className="eyebrow">{lang === 'vi' ? 'Stationery by Bì Bì' : 'Stationery by Bì Bì'}</span>
+          <h1>{heroTitle}</h1>
+          <p>{heroSubtitle}</p>
+
+          <div className="stationery-hero__actions">
+            <button type="button" className="primary-button" onClick={scrollToProducts}>
+              {heroCta}
+            </button>
+          </div>
+
+          <div className="stationery-hero__chips">
+            {pageData.heroChips.map((chip) => (
+              <span key={chip[lang]} className="stationery-hero__chip">
+                {chip[lang]}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="stationery-hero__visual">
+          <div className="stationery-hero__card stationery-hero__card--main">
+            <img src={pageData.hero.image} alt={heroTitle} loading="eager" decoding="async" />
+          </div>
+          <div className="stationery-hero__card stationery-hero__card--mini">
+            <img src={pageData.hero.secondaryImage} alt="" loading="lazy" decoding="async" aria-hidden="true" />
+            <div>
+              <strong>{lang === 'vi' ? 'Sổ tay · Bút viết · Sticker' : 'Notebook · Pens · Stickers'}</strong>
+              <span>{lang === 'vi' ? 'Góc học tập gọn xinh hơn mỗi ngày' : 'A cute, tidy study corner every day'}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="stationery-quick-grid">
+        {pageData.quickCategories.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`stationery-quick-card glass ${activeCategory === item.id ? 'is-active' : ''}`}
+            onClick={() => setCategory(item.id)}
+          >
+            <span className="stationery-quick-card__icon" aria-hidden="true">
+              {item.icon}
+            </span>
+            <span className="stationery-quick-card__label">{item.label[lang]}</span>
+          </button>
+        ))}
+      </section>
+
+      <section className="stationery-chip-row">
+        {pageData.filters.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`stationery-chip ${activeFilter === item.id ? 'is-active' : ''}`}
+            onClick={() => setFilter(item.id)}
+          >
+            {item.label[lang]}
+          </button>
+        ))}
+      </section>
+
+      <section className="stationery-section glass">
+        <div className="stationery-section__head">
+          <div>
+            <h2>{pageData.vibeTitle[lang]}</h2>
+            <p>{pageData.vibeSubtitle[lang]}</p>
+          </div>
+          <button type="button" className="section-link section-link--soft" onClick={scrollToProducts}>
+            {lang === 'vi' ? 'Xem tất cả' : 'View all'}
+          </button>
+        </div>
+
+        <div className="stationery-vibe-rail">
+          {pageData.vibes.map((item) => (
+            <StationeryVibeCard key={item.id} lang={lang} item={item} onOpenRoute={onOpenRoute} />
+          ))}
+        </div>
+      </section>
+
+      <section ref={productsRef} className="stationery-section" id="stationery-products">
+        <div className="stationery-section__head">
+          <div>
+            <h2>{pageData.productsTitle[lang]}</h2>
+            <p>{pageData.productsSubtitle[lang]}</p>
+          </div>
+          <div className="stationery-section__count">
+            {visibleProducts.length} {lang === 'vi' ? 'món' : 'items'}
+          </div>
+        </div>
+
+        <div className="stationery-product-grid">
+          {visibleProducts.map((product) => (
+            <StationeryProductCard
+              key={product.id}
+              lang={lang}
+              product={product}
+              saved={savedIds.has(product.id)}
+              onToggleSave={toggleSaved}
+              onOpenDeal={(url) => window.open(url, '_blank', 'noopener,noreferrer')}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="stationery-highlight glass">
+        <div className="stationery-section__head">
+          <div>
+            <h2>{pageData.spotlightTitle[lang]}</h2>
+            <p>{pageData.spotlightSubtitle[lang]}</p>
+          </div>
+          <button type="button" className="section-link section-link--soft" onClick={scrollToProducts}>
+            {lang === 'vi' ? 'Xem tất cả' : 'View all'}
+          </button>
+        </div>
+
+        <div className="stationery-highlight__rail">
+          {spotlightProducts.map((product, index) => (
+            <div key={product.id} className="stationery-highlight-card">
+              <span className="stationery-highlight-card__index">0{index + 1}</span>
+              <StationeryProductCard
+                lang={lang}
+                product={product}
+                saved={savedIds.has(product.id)}
+                onToggleSave={toggleSaved}
+                onOpenDeal={(url) => window.open(url, '_blank', 'noopener,noreferrer')}
+                variant="spotlight"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="stationery-banner glass">
+        <div className="stationery-banner__copy">
+          <p className="stationery-banner__eyebrow">{lang === 'vi' ? 'Bì Bì gợi ý hôm nay' : 'Bì Bì’s today pick'}</p>
+          <h2>{pageData.bannerTitle[lang]}</h2>
+          <p>{pageData.bannerSubtitle[lang]}</p>
+          <button type="button" className="section-link stationery-banner__button" onClick={() => onOpenRoute(pageData.bannerRoute)}>
+            {pageData.bannerCta[lang]}
+          </button>
+        </div>
+
+        <div className="stationery-banner__art" aria-hidden="true">
+          <img src={pageData.bannerMascot} alt="" loading="lazy" decoding="async" />
+        </div>
+      </section>
+
+      <section className="stationery-section">
+        <div className="stationery-section__head">
+          <div>
+            <h2>{pageData.needsTitle[lang]}</h2>
+            <p>{pageData.needsSubtitle[lang]}</p>
+          </div>
+        </div>
+
+        <div className="stationery-need-grid">
+          {pageData.needs.map((item) => (
+            <StationeryNeedCard key={item.id} lang={lang} item={item} onOpenRoute={onOpenRoute} />
+          ))}
+        </div>
+      </section>
+
+    </div>
+  );
+}
+
+export function BudgetPage({ content, lang, budgetSlug, ideas, onOpenIdea, onOpenBudget }: any) {
   const [sortKey, setSortKey] = useState('popular');
   const selectedBudget = getBudgetOption(budgetSlug);
   const budgetText = buildBudgetRangeText(selectedBudget, lang);
@@ -312,6 +859,39 @@ export function BudgetPage({ content, lang, budgetSlug, ideas, onOpenIdea, onOpe
         </label>
       </section>
 
+      <section className="shop-look glass">
+        <div className="shop-look__head">
+          <div>
+            <h2>{lang === 'vi' ? 'Shop the Look' : 'Shop the Look'}</h2>
+            <p>{lang === 'vi' ? 'Xem nhanh một bố cục gợi ý từ các món đang hợp ngân sách.' : 'Preview a room-style layout built from picks that fit your budget.'}</p>
+          </div>
+        </div>
+
+        <div className="shop-look__layout shop-look__layout--budget">
+          <div className="shop-look__products">
+            {sortedIdeas.slice(0, 3).map((item) => (
+              <button key={item.id} type="button" className="product-card glass" onClick={() => onOpenIdea(item.slug)}>
+                <div className="product-card__media">
+                  <img src={item.image} alt={item.title} loading="lazy" decoding="async" />
+                  <span className="product-card__theme">{item.roomCategory}</span>
+                </div>
+                <div className="product-card__body">
+                  <div className="product-card__head">
+                    <h3>{item.title}</h3>
+                    <span className="product-card__idea">{item.totalPriceLabel}</span>
+                  </div>
+                  <p>{item.description}</p>
+                  <div className="product-card__footer">
+                    <span>{lang === 'vi' ? 'Xem chi tiết' : 'View details'}</span>
+                    <Icon name="arrow-up-right" />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {sortedIdeas.length ? (
         <section className="budget-grid-list">
           {sortedIdeas.map((item) => (
@@ -329,17 +909,11 @@ export function BudgetPage({ content, lang, budgetSlug, ideas, onOpenIdea, onOpe
         </section>
       )}
 
-      <section className="section-head section-head--tight seo-copy glass">
-        <div>
-          <h2>{lang === 'vi' ? 'Mẹo chọn theo ngân sách' : 'Budget picking tips'}</h2>
-          <p>{buildBudgetSeoCopy(selectedBudget, lang)}</p>
-        </div>
-      </section>
     </div>
   );
 }
 
-function BudgetIdeaCard({ idea, lang, onOpenIdea }) {
+function BudgetIdeaCard({ idea, lang, onOpenIdea }: any) {
   return (
     <button type="button" className="budget-card glass" onClick={() => onOpenIdea(idea.slug)}>
       <div className="budget-card__media">
@@ -380,7 +954,7 @@ function BudgetIdeaCard({ idea, lang, onOpenIdea }) {
   );
 }
 
-export function NotFoundPage({ lang, content, onGoHome, onOpenDiscover }) {
+export function NotFoundPage({ lang, content, onGoHome, onOpenDiscover }: any) {
   return (
     <div className="page-content page-content--notfound">
       <section className="collection-empty glass">
@@ -404,7 +978,7 @@ export function NotFoundPage({ lang, content, onGoHome, onOpenDiscover }) {
   );
 }
 
-function IdeaCard({ idea, lang, onOpenIdea }) {
+function IdeaCard({ idea, lang, onOpenIdea }: any) {
   const meta = idea.meta[lang];
 
   return (
@@ -451,7 +1025,8 @@ export function ProductListPage({
   initialQuery = '',
   pageTitle,
   pageSubtitle,
-}) {
+}: any) {
+  const isSearchMode = Boolean(pageTitle);
   const [query, setQuery] = useState(initialQuery);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -468,6 +1043,7 @@ export function ProductListPage({
   const safePage = Math.min(currentPage, totalPages);
   const pageStart = (safePage - 1) * PRODUCT_PAGE_SIZE;
   const paginatedProducts = filteredProducts.slice(pageStart, pageStart + PRODUCT_PAGE_SIZE);
+  const discoverSections = useMemo(() => buildDiscoverSections(filteredProducts, lang), [filteredProducts, lang]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -483,12 +1059,12 @@ export function ProductListPage({
     }
   }, [currentPage, totalPages]);
 
-  const paginationItems = useMemo(() => {
+  const paginationItems = useMemo<Array<number | 'ellipsis-start' | 'ellipsis-end'>>(() => {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, index) => index + 1);
     }
 
-    const items = [1];
+    const items: Array<number | 'ellipsis-start' | 'ellipsis-end'> = [1];
     const left = Math.max(2, safePage - 1);
     const right = Math.min(totalPages - 1, safePage + 1);
 
@@ -501,19 +1077,47 @@ export function ProductListPage({
     return items;
   }, [safePage, totalPages]);
 
-  const goToPage = (page) => {
+  const goToPage = (page: number) => {
     const next = Math.min(Math.max(page, 1), totalPages);
     setCurrentPage(next);
   };
 
+  const openSearchResults = (searchQuery: string) => {
+    onOpenItem(searchQuery ? `${routeForSearch()}?q=${encodeURIComponent(searchQuery)}` : routeForSearch());
+  };
+
   return (
     <div className="page-content page-content--products">
-      <section className="products-hero glass">
+      <section className={`products-hero glass ${isSearchMode ? 'products-hero--search' : 'products-hero--discover'}`}>
+        <div className="decor-layer decor-layer--hero product-page__decor" aria-hidden="true">
+          <span className="decor-cloud decor-cloud--far decor-cloud--1" />
+          <span className="decor-cloud decor-cloud--near decor-cloud--3" />
+          <span className="decor-sparkle decor-sparkle--1" />
+          <span className="decor-sparkle decor-sparkle--2" />
+        </div>
+
         <div className="products-hero__copy">
           <h1>{pageTitle || content.productsTitle}</h1>
           <p>{pageSubtitle || content.productsSubtitle}</p>
 
-          <label className="product-search-bar" htmlFor="product-search">
+          {isSearchMode ? (
+            <label className="product-search-bar" htmlFor="product-search">
+              <Icon name="search" />
+              <input
+                id="product-search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={content.productsSearch}
+                aria-label={content.productsSearch}
+              />
+            </label>
+          ) : null}
+        </div>
+      </section>
+
+      {!isSearchMode ? (
+        <section className="product-search-strip glass">
+          <label className="product-search-bar product-search-bar--compact" htmlFor="product-search">
             <Icon name="search" />
             <input
               id="product-search"
@@ -523,99 +1127,121 @@ export function ProductListPage({
               aria-label={content.productsSearch}
             />
           </label>
-        </div>
-      </section>
-
-      <section className="product-toolbar">
-        <div>
-          <h2>{content.productsSectionTitle}</h2>
-          <p>{content.productsSectionSub}</p>
-        </div>
-      </section>
-
-      <section className="product-grid">
-        {paginatedProducts.map((product) => (
-          <button key={product.id} type="button" className="product-card glass" onClick={() => onOpenItem(product.route)}>
-            <div className="product-card__media">
-              <img src={product.image} alt={product.name} loading="lazy" decoding="async" />
-              <span className="product-card__theme">{product.category}</span>
-            </div>
-
-            <div className="product-card__body">
-              <div className="product-card__head">
-                <h3>{product.name}</h3>
-                <span className="product-card__idea">{product.shop}</span>
-              </div>
-              <p>{product.detail}</p>
-
-              <div className="product-card__meta">
-                <strong>{product.price}</strong>
-                <span>{product.category}</span>
-              </div>
-
-              <div className="product-card__footer">
-                <span>{lang === 'vi' ? 'Xem nơi mua' : 'See where to buy'}</span>
-                <Icon name="arrow-up-right" />
-              </div>
-            </div>
+          <button type="button" className="section-link section-link--soft" onClick={() => setQuery('')}>
+            {lang === 'vi' ? 'Làm mới' : 'Reset'}
           </button>
-        ))}
-      </section>
+        </section>
+      ) : null}
 
-      <nav className="product-pagination" aria-label={lang === 'vi' ? 'Phân trang sản phẩm' : 'Product pagination'}>
-        <button
-          type="button"
-          className="product-pagination__arrow"
-          onClick={() => goToPage(safePage - 1)}
-          disabled={safePage === 1}
-          aria-label={lang === 'vi' ? 'Trang trước' : 'Previous page'}
-        >
-          <Icon name="chevron-left" />
-        </button>
+      {isSearchMode ? (
+        filteredProducts.length ? (
+          <>
+            <section className="product-toolbar">
+              <div>
+                <h2>{content.productsSectionTitle}</h2>
+                <p>{content.productsSectionSub}</p>
+              </div>
+              <div className="product-toolbar__count">
+                {filteredProducts.length} {lang === 'vi' ? 'món' : 'items'}
+              </div>
+            </section>
 
-        <div className="product-pagination__pages">
-          {paginationItems.map((item) =>
-            item === 'ellipsis-start' || item === 'ellipsis-end' ? (
-              <span key={item} className="product-pagination__ellipsis" aria-hidden="true">
-                …
-              </span>
-            ) : (
+            <section className="product-grid">
+              {paginatedProducts.map((product) => (
+                <GalleryProductCard key={product.id} lang={lang} product={product} onOpenItem={onOpenItem} variant="grid" />
+              ))}
+            </section>
+
+            <nav className="product-pagination" aria-label={lang === 'vi' ? 'Phân trang sản phẩm' : 'Product pagination'}>
               <button
-                key={item}
                 type="button"
-                className={`product-pagination__page ${safePage === item ? 'is-active' : ''}`}
-                onClick={() => goToPage(item)}
-                aria-current={safePage === item ? 'page' : undefined}
-                aria-label={`${lang === 'vi' ? 'Trang' : 'Page'} ${item}`}
+                className="product-pagination__arrow"
+                onClick={() => goToPage(safePage - 1)}
+                disabled={safePage === 1}
+                aria-label={lang === 'vi' ? 'Trang trước' : 'Previous page'}
               >
-                {item}
+                <Icon name="chevron-left" />
               </button>
-            ),
-          )}
-        </div>
 
-        <button
-          type="button"
-          className="product-pagination__arrow"
-          onClick={() => goToPage(safePage + 1)}
-          disabled={safePage === totalPages}
-          aria-label={lang === 'vi' ? 'Trang sau' : 'Next page'}
-        >
-          <Icon name="chevron-right" />
-        </button>
-      </nav>
+              <div className="product-pagination__pages">
+                {paginationItems.map((item) =>
+                  item === 'ellipsis-start' || item === 'ellipsis-end' ? (
+                    <span key={item} className="product-pagination__ellipsis" aria-hidden="true">
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`product-pagination__page ${safePage === item ? 'is-active' : ''}`}
+                      onClick={() => goToPage(item)}
+                      aria-current={safePage === item ? 'page' : undefined}
+                      aria-label={`${lang === 'vi' ? 'Trang' : 'Page'} ${item}`}
+                    >
+                      {item}
+                    </button>
+                  ),
+                )}
+              </div>
 
-      <section className="section-head section-head--tight seo-copy glass">
-        <div>
-          <h2>{lang === 'vi' ? 'Vài dòng về trang khám phá' : 'A note about the discover page'}</h2>
-          <p>{buildProductListSeoCopy(lang)}</p>
+              <button
+                type="button"
+                className="product-pagination__arrow"
+                onClick={() => goToPage(safePage + 1)}
+                disabled={safePage === totalPages}
+                aria-label={lang === 'vi' ? 'Trang sau' : 'Next page'}
+              >
+                <Icon name="chevron-right" />
+              </button>
+            </nav>
+          </>
+        ) : (
+          <section className="product-empty glass">
+            <h2>{lang === 'vi' ? 'Không tìm thấy món nào phù hợp' : 'No matching picks found'}</h2>
+            <p>{lang === 'vi' ? 'Thử đổi từ khóa hoặc xoá tìm kiếm để xem lại toàn bộ gợi ý.' : 'Try another keyword or clear the search to see all picks again.'}</p>
+            <button type="button" className="section-link section-link--soft" onClick={() => setQuery('')}>
+              {lang === 'vi' ? 'Xoá tìm kiếm' : 'Clear search'}
+            </button>
+          </section>
+        )
+      ) : filteredProducts.length ? (
+        <div className="product-shelves">
+          {discoverSections.map((section) => (
+            <section key={section.id} className="product-shelf glass">
+              <div className="product-shelf__head">
+                <div>
+                  <h2>{section.title}</h2>
+                  <p>{section.description}</p>
+                </div>
+                <button type="button" className="section-link section-link--soft" onClick={() => openSearchResults(section.action)}>
+                  {lang === 'vi' ? 'Xem tất cả' : 'View all'}
+                </button>
+              </div>
+
+              <div className="product-shelf__rail" role="list" aria-label={section.title}>
+                {section.items.map((product) => (
+                  <div key={`${section.id}-${product.id}`} role="listitem" className="product-shelf__item">
+                    <GalleryProductCard lang={lang} product={product} onOpenItem={onOpenItem} variant="shelf" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
-      </section>
+      ) : (
+        <section className="product-empty glass">
+          <h2>{lang === 'vi' ? 'Không tìm thấy món nào phù hợp' : 'No matching picks found'}</h2>
+          <p>{lang === 'vi' ? 'Thử đổi từ khóa hoặc xoá bộ lọc để xem lại toàn bộ gợi ý.' : 'Try another keyword or reset the search to see all picks again.'}</p>
+          <button type="button" className="section-link section-link--soft" onClick={() => setQuery('')}>
+            {lang === 'vi' ? 'Xoá tìm kiếm' : 'Clear search'}
+          </button>
+        </section>
+      )}
     </div>
   );
 }
 
-export function IdeaCategoryPage({ lang, page, onOpenIdea }) {
+export function IdeaCategoryPage({ lang, page, onOpenIdea }: any) {
   const resolvedPage = page || getIdeaCategoryPage('phong-ngu');
   const [activeFilter, setActiveFilter] = useState('all');
   const [likedIds, setLikedIds] = useState(() => new Set());
@@ -707,7 +1333,7 @@ export function IdeaCategoryPage({ lang, page, onOpenIdea }) {
   );
 }
 
-function IdeaStoryCard({ idea, lang, variant, liked, onToggleLiked, onOpenIdea }) {
+function IdeaStoryCard({ idea, lang, variant, liked, onToggleLiked, onOpenIdea }: any) {
   const openIdea = () => onOpenIdea(idea.relatedSlug || idea.slug);
 
   return (
@@ -766,7 +1392,7 @@ function IdeaStoryCard({ idea, lang, variant, liked, onToggleLiked, onOpenIdea }
   );
 }
 
-export function DetailPage({ content, lang, idea, ideas, onBack, onOpenIdea, onOpenProducts }) {
+export function DetailPage({ content, lang, idea, ideas, onBack, onOpenIdea, onOpenProducts }: any) {
   const meta = idea.meta[lang];
   const galleryItems = [idea, ...ideas.filter((item) => item.slug !== idea.slug)].slice(0, 4);
 
@@ -918,7 +1544,7 @@ function ShopTheLookSection({
   onProductHover,
   onClearProductHover,
   onClosePreview,
-}) {
+}: any) {
   const previewVisible = Boolean(previewProduct);
 
   return (
@@ -971,7 +1597,7 @@ function ShopTheLookSection({
   );
 }
 
-function RoomImage({ room, activeProductId, rippleProductId, onHotspotSelect, onProductHover, onClearProductHover }) {
+function RoomImage({ room, activeProductId, rippleProductId, onHotspotSelect, onProductHover, onClearProductHover }: any) {
   return (
     <div className="shop-look__image-shell">
       <div className="shop-look__image-wrap">
@@ -994,7 +1620,7 @@ function RoomImage({ room, activeProductId, rippleProductId, onHotspotSelect, on
   );
 }
 
-function RoomHotspot({ product, active, rippling, onClick, onHover, onHoverEnd }) {
+function RoomHotspot({ product, active, rippling, onClick, onHover, onHoverEnd }: any) {
   return (
     <button
       type="button"
@@ -1022,7 +1648,7 @@ function ProductPanel({
   onProductHover,
   onClearProductHover,
   onClosePreview,
-}) {
+}: any) {
   const selectedProduct = room.products.find((product) => product.id === activeProductId) || room.products[0];
 
   return (
@@ -1068,7 +1694,7 @@ function ProductPanel({
   );
 }
 
-function ProductCard({ lang, product, active, hovered, onActivate, onHover, onHoverEnd }) {
+function ProductCard({ lang, product, active, hovered, onActivate, onHover, onHoverEnd }: any) {
   const handleOpenProduct = () => {
     onActivate();
     if (product.affiliateUrl && product.affiliateUrl !== '#') {

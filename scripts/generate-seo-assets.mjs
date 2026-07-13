@@ -1,6 +1,34 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { allSeoRoutes, privateSeoRoutes } from '../src/siteRoutes.js';
+
+const allSeoRoutes = [
+  '/',
+  '/decor',
+  '/stationery',
+  '/accessories',
+  '/gifts',
+  '/san-pham-goi-y',
+  '/budget/under-300k',
+  '/budget/300k-500k',
+  '/budget/500k-1m',
+  '/budget/1m-2m',
+  '/budget/2m-5m',
+  '/budget/over-5m',
+  '/decor/phong-ngu',
+  '/decor/goc-hoc-tap',
+  '/decor/phong-khach',
+  '/decor/nha-bep',
+  '/decor/ban-lam-viec',
+  '/decor/phong-tre-em',
+  '/decor/phong-tro',
+  '/decor/kham-pha',
+  '/idea/goc-hoc-tap-xanh-da-troi-pastel',
+  '/idea/phong-ngu-hong-nhat-cong-chua',
+  '/idea/ban-lam-viec-trang-kem-toi-gian',
+  '/idea/ke-decor-cute-kieu-han',
+];
+
+const privateSeoRoutes = ['/search', '/yeu-thich', '/404', '/wishlist', '/cart', '/checkout', '/payment', '/order', '/order-tracking', '/account', '/admin'];
 
 const siteUrl = process.env.SITE_URL || process.env.VITE_SITE_URL || 'http://127.0.0.1:4173';
 const publicDir = resolve(process.cwd(), 'public');

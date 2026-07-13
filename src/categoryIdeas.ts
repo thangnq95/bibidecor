@@ -1,6 +1,6 @@
-const t = (vi, en) => ({ vi, en });
+const t = (vi: string | string[], en: string | string[]) => ({ vi, en });
 
-const chip = (id, icon, vi, en) => ({ id, icon, label: t(vi, en) });
+const chip = (id: string, icon: string, vi: string, en: string) => ({ id, icon, label: t(vi, en) });
 
 const card = ({
   id,
@@ -17,7 +17,7 @@ const card = ({
   countVi,
   countEn,
   relatedSlug,
-}) => ({
+}: any) => ({
   id,
   slug,
   image,
@@ -90,7 +90,7 @@ function parseItemCount(text = '') {
   return match ? Number(match[0]) : 0;
 }
 
-const bedroomPage = {
+const bedroomPage: any = {
   theme: 'bedroom',
   navActive: 'ideas',
   hero: {
@@ -226,7 +226,7 @@ const bedroomPage = {
   },
 };
 
-const studyPage = {
+const studyPage: any = {
   theme: 'study',
   navActive: 'ideas',
   hero: {
@@ -350,7 +350,7 @@ const studyPage = {
   bottomCta: bedroomPage.bottomCta,
 };
 
-const deskPage = {
+const deskPage: any = {
   theme: 'desk',
   navActive: 'ideas',
   hero: {
@@ -474,7 +474,7 @@ const deskPage = {
   bottomCta: bedroomPage.bottomCta,
 };
 
-const shelfPage = {
+const shelfPage: any = {
   theme: 'shelf',
   navActive: 'ideas',
   hero: {
@@ -598,7 +598,7 @@ const shelfPage = {
   bottomCta: bedroomPage.bottomCta,
 };
 
-const explorePage = {
+const explorePage: any = {
   theme: 'explore',
   navActive: 'ideas',
   hero: {
@@ -625,7 +625,7 @@ const explorePage = {
   bottomCta: bedroomPage.bottomCta,
 };
 
-const cloneCategoryPage = (basePage, overrides = {}) => ({
+const cloneCategoryPage = (basePage: any, overrides: any = {}) => ({
   ...basePage,
   ...overrides,
   hero: {
@@ -639,7 +639,7 @@ const cloneCategoryPage = (basePage, overrides = {}) => ({
   bottomCta: overrides.bottomCta || basePage.bottomCta,
 });
 
-const livingRoomPage = cloneCategoryPage(explorePage, {
+const livingRoomPage: any = cloneCategoryPage(explorePage, {
   theme: 'living',
   hero: {
     breadcrumb: t(['Trang chủ', 'Ý tưởng', 'Phòng khách'], ['Home', 'Ideas', 'Living room']),
@@ -652,7 +652,7 @@ const livingRoomPage = cloneCategoryPage(explorePage, {
   },
 });
 
-const kitchenPage = cloneCategoryPage(shelfPage, {
+const kitchenPage: any = cloneCategoryPage(shelfPage, {
   theme: 'kitchen',
   hero: {
     breadcrumb: t(['Trang chủ', 'Ý tưởng', 'Nhà bếp'], ['Home', 'Ideas', 'Kitchen']),
@@ -668,7 +668,7 @@ const kitchenPage = cloneCategoryPage(shelfPage, {
   cards: [shelfPage.cards[1], shelfPage.cards[2], bedroomPage.cards[2], studyPage.cards[2]],
 });
 
-const kidsRoomPage = cloneCategoryPage(studyPage, {
+const kidsRoomPage: any = cloneCategoryPage(studyPage, {
   theme: 'kids',
   hero: {
     breadcrumb: t(['Trang chủ', 'Ý tưởng', 'Phòng trẻ em'], ['Home', 'Ideas', 'Kids room']),
@@ -684,7 +684,7 @@ const kidsRoomPage = cloneCategoryPage(studyPage, {
   cards: [studyPage.cards[0], studyPage.cards[1], bedroomPage.cards[0], shelfPage.cards[2]],
 });
 
-const dormRoomPage = cloneCategoryPage(deskPage, {
+const dormRoomPage: any = cloneCategoryPage(deskPage, {
   theme: 'dorm',
   hero: {
     breadcrumb: t(['Trang chủ', 'Ý tưởng', 'Phòng trọ'], ['Home', 'Ideas', 'Dorm room']),
@@ -700,7 +700,7 @@ const dormRoomPage = cloneCategoryPage(deskPage, {
   cards: [deskPage.cards[0], deskPage.cards[1], shelfPage.cards[0], bedroomPage.cards[2]],
 });
 
-const themePages = {
+const themePages: Record<string, any> = {
   bedroom: bedroomPage,
   study: studyPage,
   desk: deskPage,
@@ -712,7 +712,7 @@ const themePages = {
   explore: explorePage,
 };
 
-export function inferCategoryTheme(slug = '') {
+export function inferCategoryTheme(slug: string = '') {
   if (slug.includes('goc-hoc-tap')) return 'study';
   if (slug.includes('phong-khach')) return 'living';
   if (slug.includes('nha-bep')) return 'kitchen';
@@ -725,7 +725,7 @@ export function inferCategoryTheme(slug = '') {
   return 'bedroom';
 }
 
-export function getIdeaCategoryPage(slug) {
+export function getIdeaCategoryPage(slug: string) {
   return themePages[inferCategoryTheme(slug)];
 }
 
@@ -753,11 +753,11 @@ const budgetSourcePages = [
   explorePage,
 ];
 
-export function getBudgetOption(slug) {
+export function getBudgetOption(slug: string) {
   return budgetOptions.find((option) => option.id === slug) || budgetOptions[0];
 }
 
-export function filterBudgetIdeas(items, budgetSlug) {
+export function filterBudgetIdeas(items: any[], budgetSlug: string) {
   const option = getBudgetOption(budgetSlug);
   return items.filter((item) => {
     if (option.id === 'over-5m') return item.totalPrice > option.minPrice;
@@ -765,7 +765,7 @@ export function filterBudgetIdeas(items, budgetSlug) {
   });
 }
 
-export function getBudgetIdeas(lang) {
+export function getBudgetIdeas(lang: 'vi' | 'en' | string) {
   const seen = new Set();
   const items = [];
 
