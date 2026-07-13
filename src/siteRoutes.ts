@@ -24,6 +24,7 @@ export const broadPageRoutes = {
 
 export const ideaSlugs = [
   'goc-hoc-tap-xanh-da-troi-pastel',
+  'goc-hoc-tap-hong-cute-cloud',
   'phong-ngu-hong-nhat-cong-chua',
   'ban-lam-viec-trang-kem-toi-gian',
   'ke-decor-cute-kieu-han',

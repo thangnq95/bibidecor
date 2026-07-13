@@ -236,7 +236,7 @@ const studyPage: any = {
       'Góc học tập sáng sủa, gọn gàng và rất dễ tập trung.\nKhám phá cảm hứng để bàn học luôn đáng yêu và nhiều năng lượng.',
       'Bright, tidy, and focused.\nFind inspiration to keep your study space cute and energizing.',
     ),
-    badge: t('⭐ 36 ý tưởng đang chờ bạn khám phá', '⭐ 36 ideas waiting for you'),
+    badge: t('⭐ 37 ý tưởng đang chờ bạn khám phá', '⭐ 37 ideas waiting for you'),
     image: '/assets/study-blue.jpg',
   },
   filters: [
@@ -298,6 +298,22 @@ const studyPage: any = {
     }),
   ],
   cards: [
+    card({
+      id: 'study-grid-pink-cloud',
+      slug: 'goc-hoc-tap-hong-cute-cloud',
+      image: '/assets/goc-hoc-tap-hong-cute.jpg',
+      titleVi: 'Góc học tập hồng cute có đèn mây',
+      titleEn: 'Cute pink study corner with cloud lamp',
+      descriptionVi: 'Bàn học trắng hồng, pegboard gọn gàng và những món decor mềm xinh.',
+      descriptionEn: 'A white-and-pink desk, tidy pegboard, and soft cute decor details.',
+      tagsVi: ['Dễ thương', 'Hồng pastel'],
+      tagsEn: ['Cute', 'Pastel pink'],
+      budgetVi: 'Khoảng 4.258.180đ',
+      budgetEn: 'Around 4,258,180 VND',
+      countVi: '10 món cần mua',
+      countEn: '10 items needed',
+      relatedSlug: 'goc-hoc-tap-hong-cute-cloud',
+    }),
     card({
       id: 'study-grid-1',
       slug: 'goc-hoc-tap-vintage-nhe-nhang',
