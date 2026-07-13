@@ -1495,7 +1495,15 @@ export function DetailPage({ content, lang, idea, ideas, onBack, onOpenIdea, onO
                 </div>
                 <div className="shopping-item__price">{item.price}</div>
                 <div className="shopping-item__shop">{item.shop}</div>
-                <button type="button" className="buy-button">
+                <button
+                  type="button"
+                  className="buy-button"
+                  onClick={() => {
+                    if (item.url) {
+                      window.open(item.url, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
+                >
                   {content.buyNow}
                 </button>
                 <button type="button" className="shopping-fav" aria-label={content.saveLabel}>
