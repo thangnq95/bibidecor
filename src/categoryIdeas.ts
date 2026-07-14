@@ -624,7 +624,7 @@ const explorePage: any = {
       'Tổng hợp những góc decor đáng yêu nhất để bạn bắt đầu từ bất cứ đâu.\nMỗi ý tưởng đều nhẹ nhàng, sáng sủa và dễ áp dụng.',
       'A gentle collection of the cutest decor corners to start from anywhere.\nEvery idea stays bright, soft, and easy to apply.',
     ),
-    badge: t('⭐ 52 ý tưởng đang chờ bạn khám phá', '⭐ 52 ideas waiting for you'),
+    badge: t('⭐ 53 ý tưởng đang chờ bạn khám phá', '⭐ 53 ideas waiting for you'),
     image: '/assets/hero-bg.jpg',
   },
   filters: [
@@ -635,8 +635,8 @@ const explorePage: any = {
     chip('modern', '🛋', 'Hiện đại', 'Modern'),
     chip('room', '🏠', 'Cảm hứng', 'Inspo'),
   ],
-  featured: bedroomPage.featured,
-  sideCards: [studyPage.featured, deskPage.featured],
+  featured: studyPage.cards[0],
+  sideCards: [bedroomPage.featured, studyPage.featured],
   cards: [shelfPage.featured, bedroomPage.cards[1], studyPage.cards[1], deskPage.cards[1]],
   bottomCta: bedroomPage.bottomCta,
 };

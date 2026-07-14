@@ -3832,7 +3832,7 @@ a {
 
 .detail-notes {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -3880,6 +3880,12 @@ a {
 .shopping-panel__head h3 {
   margin: 0;
   font-size: clamp(1.2rem, 2vw, 1.5rem);
+}
+
+.shopping-panel__desc {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .shopping-panel__head span {
@@ -3963,6 +3969,12 @@ a {
   background: transparent;
   color: #7488a2;
   cursor: pointer;
+}
+
+.shopping-fav.is-active {
+  background: linear-gradient(180deg, rgba(255, 214, 226, 0.96), rgba(255, 238, 244, 0.94));
+  color: #d85f83;
+  box-shadow: 0 10px 20px rgba(216, 95, 131, 0.18);
 }
 
 .section-link {

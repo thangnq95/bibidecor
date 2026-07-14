@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { budgetOptions, filterBudgetIdeas, getBudgetIdeas, getBudgetOption, getIdeaCategoryPage } from './categoryIdeas';
 import { FloatingMascot } from './FloatingMascot';
-import { BudgetPage, CollectionLandingPage, DetailPage, HomePage, IdeaCategoryPage, NotFoundPage, ProductListPage, ShopTheLookSection, StationeryPage, buildBudgetRangeText, buildBudgetSubtitle } from './pages/bibiPages';
+import { BudgetPage, buildBudgetRangeText, buildBudgetSubtitle } from './pages/budget/BudgetPage';
+import { CollectionLandingPage } from './pages/collection/CollectionLandingPage';
+import { DetailPage } from './pages/detail/DetailPage';
+import { FavoritesPage } from './pages/favorites/FavoritesPage';
+import { HomePage } from './pages/home/HomePage';
+import { IdeaCategoryPage } from './pages/idea-category/IdeaCategoryPage';
+import { NotFoundPage } from './pages/not-found/NotFoundPage';
+import { ProductListPage } from './pages/products/ProductListPage';
+import { ShopTheLookSection } from './pages/shop-the-look/ShopTheLookSection';
+import { StationeryPage } from './pages/stationery/StationeryPage';
 import { Icon } from './components/Icon';
 import {
   getCategorySlugFromPath,
@@ -34,6 +43,8 @@ import {
   getSiteOrigin,
   toAbsoluteUrl,
 } from './seo';
+
+const FAVORITE_PRODUCTS_STORAGE_KEY = 'bibidecor-favorite-products';
 
 const ideas = [
   {
@@ -1866,6 +1877,16 @@ function App() {
     const saved = window.localStorage.getItem('bibidecor-lang');
     return saved === 'en' ? 'en' : 'vi';
   });
+  const [favoriteProductIds, setFavoriteProductIds] = useState(() => {
+    if (typeof window === 'undefined') return new Set();
+
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(FAVORITE_PRODUCTS_STORAGE_KEY) || '[]');
+      return new Set(Array.isArray(saved) ? saved : []);
+    } catch {
+      return new Set();
+    }
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [heroQuery, setHeroQuery] = useState('');
@@ -1899,6 +1920,34 @@ function App() {
   const categorySlug = getCategorySlugFromPath(path);
   const categoryPage = isDecorHome ? getIdeaCategoryPage('kham-pha') : isCategoryPage ? getIdeaCategoryPage(categorySlug || '') : null;
   const discoverCatalog = useMemo(() => buildDiscoverCatalog(lang), [lang]);
+  const favoriteProducts = useMemo(
+    () =>
+      ideas.flatMap((ideaItem) => {
+        const meta = ideaItem.meta[lang];
+        return (meta.shoppingItems || [])
+          .map((item, index) => ({
+            id: `${ideaItem.slug}::${index}`,
+            name: item.name,
+            detail: item.detail,
+            price: item.price,
+            shop: item.shop,
+            image: ideaItem.image,
+            route: item.url || routeForIdea(ideaItem.slug),
+            category: meta.title,
+            categoryLabel: lang === 'vi' ? 'Sản phẩm yêu thích' : 'Saved product',
+            orderIndex: index,
+          }))
+          .filter((item) => favoriteProductIds.has(item.id));
+      }),
+    [favoriteProductIds, lang],
+  );
+  const favoritesPage = useMemo(
+    () => ({
+      ...broadPageConfigs[routeForFavorites()],
+      items: favoriteProducts,
+    }),
+    [favoriteProducts],
+  );
   const shopLookRooms = useMemo(() => buildShopLookRooms(lang), [lang]);
   const activeShopRoom = useMemo(() => shopLookRooms.find((room) => room.id === activeShopRoomId) || shopLookRooms[0], [activeShopRoomId, shopLookRooms]);
   const activeShopProduct = useMemo(() => activeShopRoom?.products.find((product) => product.id === activeShopProductId) || activeShopRoom?.products[0] || null, [activeShopProductId, activeShopRoom]);
@@ -1957,6 +2006,11 @@ function App() {
     window.localStorage.setItem('bibidecor-lang', lang);
     document.documentElement.lang = lang === 'vi' ? 'vi' : 'en';
   }, [lang]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(FAVORITE_PRODUCTS_STORAGE_KEY, JSON.stringify([...favoriteProductIds]));
+  }, [favoriteProductIds]);
 
   useEffect(() => {
     applySeoMetadata(seoData);
@@ -2034,9 +2088,30 @@ function App() {
     setSearchOpen(false);
   };
 
+  const openItemRoute = (route) => {
+    if (/^https?:\/\//i.test(String(route || ''))) {
+      window.open(route, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    navigate(route);
+  };
+
   const submitSearch = (value) => {
     const normalized = compactText(value);
     navigate(normalized ? `${routeForSearch()}?q=${encodeURIComponent(normalized)}` : routeForSearch());
+  };
+
+  const toggleFavoriteProduct = (productId) => {
+    setFavoriteProductIds((current) => {
+      const next = new Set(current);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else {
+        next.add(productId);
+      }
+      return next;
+    });
   };
 
   const handleSearch = () => {
@@ -2180,21 +2255,21 @@ function App() {
                   : `Cute picks matching “${currentSearchQuery}”.`
                 : content.productsSubtitle
             }
-            onOpenItem={(route) => navigate(route)}
+            onOpenItem={openItemRoute}
           />
         ) : isDiscoverPage ? (
           <ProductListPage
             content={content}
             lang={lang}
             products={discoverCatalog}
-            onOpenItem={(route) => navigate(route)}
+            onOpenItem={openItemRoute}
           />
         ) : isFavoritesPage ? (
-          <CollectionLandingPage
+          <FavoritesPage
             content={content}
             lang={lang}
-            page={broadPageConfigs[routeForFavorites()]}
-            onOpenItem={(route) => navigate(route)}
+            page={favoritesPage}
+            onOpenItem={openItemRoute}
             onOpenExplore={() => navigate(routeForDiscover())}
           />
         ) : broadPageConfigs[path] ? (
@@ -2202,7 +2277,7 @@ function App() {
             content={content}
             lang={lang}
             page={broadPageConfigs[path]}
-            onOpenItem={(route) => navigate(route)}
+            onOpenItem={openItemRoute}
             onOpenExplore={() => navigate(routeForDiscover())}
           />
         ) : isBudgetPage ? (
@@ -2230,6 +2305,8 @@ function App() {
             onBack={() => navigate('/')}
             onOpenIdea={(slug) => navigate(routeForIdea(slug))}
             onOpenProducts={() => navigate(routeForDiscover())}
+            onToggleProductFavorite={toggleFavoriteProduct}
+            isProductFavorite={(productId) => favoriteProductIds.has(productId)}
           />
         )}
 
