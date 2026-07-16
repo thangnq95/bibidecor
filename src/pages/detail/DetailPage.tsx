@@ -1,4 +1,6 @@
 import { Icon } from '../../components/Icon';
+import type { DetailPageProps } from '../../interfaces';
+import './DetailPage.css';
 
 export function DetailPage({
   content,
@@ -10,7 +12,7 @@ export function DetailPage({
   onOpenProducts,
   onToggleProductFavorite,
   isProductFavorite,
-}: any) {
+}: DetailPageProps) {
   const meta = idea.meta[lang];
   const getShoppingItemId = (index) => `${idea.slug}::${index}`;
 
@@ -28,10 +30,6 @@ export function DetailPage({
               <Icon name="heart" />
               <span>{content.saveLabel}</span>
             </button>
-            <button type="button" className="ghost-link">
-              <Icon name="share" />
-              <span>{content.shareLabel}</span>
-            </button>
           </div>
         </div>
 
@@ -43,21 +41,8 @@ export function DetailPage({
           </div>
 
           <div className="detail-summary">
-            <p className="detail-kicker">
-              <Icon name="sparkle" /> {content.shopTag}
-            </p>
             <h1>{meta.title}</h1>
             <p className="detail-description">{meta.description}</p>
-
-            <div className="summary-grid">
-              {meta.summary.map((item) => (
-                <article key={item.label} className="summary-card">
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                  <em>{item.hint}</em>
-                </article>
-              ))}
-            </div>
 
             <div className="detail-notes">
               <article className="palette-card">

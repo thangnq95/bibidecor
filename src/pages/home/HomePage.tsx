@@ -1,5 +1,7 @@
 import { routeForBudget, routeForDiscover } from '../../siteRoutes';
 import { Icon } from '../../components/Icon';
+import type { HomePageProps } from '../../interfaces';
+import './HomePage.css';
 
 export function HomePage({
   content,
@@ -16,7 +18,7 @@ export function HomePage({
   onOpenCategory,
   onOpenBudget,
   onOpenPick,
-}: any) {
+}: HomePageProps) {
   const todayPicks = picks.slice(0, 6);
   const featuredIdeas = ideas.slice(0, 4);
 

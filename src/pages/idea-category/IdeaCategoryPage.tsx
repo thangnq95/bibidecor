@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { getIdeaCategoryPage } from '../../categoryIdeas';
+import { Breadcrumb } from '../../components/breadcrumb';
 import { Icon } from '../../components/Icon';
+import './IdeaCategoryPage.css';
 
 export function IdeaCategoryPage({ lang, page, onOpenIdea }: any) {
   const resolvedPage = page || getIdeaCategoryPage('phong-ngu');
@@ -56,6 +58,7 @@ export function IdeaCategoryPage({ lang, page, onOpenIdea }: any) {
         </div>
 
         <div className="idea-hero__copy">
+          <Breadcrumb items={resolvedPage.hero.breadcrumb?.[lang] || []} />
           <h1>{resolvedPage.hero.title[lang]}</h1>
           <p className="idea-hero__subtitle">{resolvedPage.hero.subtitle[lang]}</p>
         </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { routeForSearch } from '../../siteRoutes';
 import { Icon } from '../../components/Icon';
 import { PRODUCT_PAGE_SIZE, GalleryProductCard, buildDiscoverSections } from '../shared/pageShared';
+import './ProductListPage.css';
 
 export function ProductListPage({
   content,

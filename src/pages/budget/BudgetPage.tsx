@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { budgetOptions, filterBudgetIdeas, getBudgetOption } from '../../categoryIdeas';
 import { Icon } from '../../components/Icon';
 import { buildBudgetRangeText, buildBudgetSubtitle } from '../shared/pageShared';
+import './BudgetPage.css';
 
 export { buildBudgetRangeText, buildBudgetSubtitle } from '../shared/pageShared';
 

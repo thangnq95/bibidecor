@@ -27,6 +27,7 @@ export const ideaSlugs = [
   'goc-hoc-tap-hong-cute-cloud',
   'phong-ngu-hong-nhat-cong-chua',
   'ban-lam-viec-trang-kem-toi-gian',
+  'ban-lam-viec-hong-pastel-cute',
   'ke-decor-cute-kieu-han',
 ];
 

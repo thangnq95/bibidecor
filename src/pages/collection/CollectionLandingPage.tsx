@@ -1,8 +1,10 @@
 import { type CSSProperties } from 'react';
 import { toAbsoluteUrl } from '../../seo';
 import { GalleryProductCard } from '../shared/pageShared';
+import type { CollectionLandingPageProps } from '../../interfaces';
+import './CollectionLandingPage.css';
 
-export function CollectionLandingPage({ content, lang, page, onOpenItem, onOpenExplore }: any) {
+export function CollectionLandingPage({ content, lang, page, onOpenItem, onOpenExplore }: CollectionLandingPageProps) {
   const pageTitle = lang === 'vi' ? page.titleVi : page.titleEn;
   const pageSubtitle = lang === 'vi' ? page.subtitleVi : page.subtitleEn;
   const pageItems = page.items || [];

@@ -1,7 +1,9 @@
 import { type CSSProperties, useMemo, useRef, useState } from 'react';
 import { Icon } from '../../components/Icon';
+import type { StationeryPageProps, StationeryProduct, StationeryProductCardProps } from '../../interfaces';
+import './StationeryPage.css';
 
-function stationeryMatchesFilter(product: any, filterId: string) {
+function stationeryMatchesFilter(product: StationeryProduct, filterId: string) {
   if (filterId === 'all') return true;
   if (filterId === 'under-50k') return (product.priceValue || 0) < 50000;
   if (filterId === 'under-100k') return (product.priceValue || 0) < 100000;
@@ -9,12 +11,12 @@ function stationeryMatchesFilter(product: any, filterId: string) {
   return flags.includes(filterId);
 }
 
-function stationeryMatchesCategory(product: any, categoryId: string) {
+function stationeryMatchesCategory(product: StationeryProduct, categoryId: string) {
   if (categoryId === 'all') return true;
   return (product.categories || []).includes(categoryId);
 }
 
-function StationeryProductCard({ lang, product, saved, onToggleSave, onOpenDeal, variant = 'grid' }: any) {
+function StationeryProductCard({ lang, product, saved, onToggleSave, onOpenDeal, variant = 'grid' }: StationeryProductCardProps) {
   const tags = product.tags?.[lang] || [];
   const productName = product.name?.[lang] || product.name || '';
 
@@ -66,36 +68,7 @@ function StationeryProductCard({ lang, product, saved, onToggleSave, onOpenDeal,
   );
 }
 
-function StationeryNeedCard({ lang, item, onOpenRoute }: any) {
-  return (
-    <button type="button" className="stationery-need-card glass" onClick={() => onOpenRoute(item.route)}>
-      <span className="stationery-need-card__icon" aria-hidden="true">
-        {item.icon}
-      </span>
-      <div className="stationery-need-card__copy">
-        <h3>{item.title[lang]}</h3>
-        <p>{item.description[lang]}</p>
-      </div>
-    </button>
-  );
-}
-
-function StationeryVibeCard({ lang, item, onOpenRoute }: any) {
-  return (
-    <article className="stationery-vibe-card glass">
-      <img src={item.image} alt={item.title[lang]} loading="lazy" decoding="async" />
-      <div className="stationery-vibe-card__body">
-        <h3>{item.title[lang]}</h3>
-        <p>{item.description[lang]}</p>
-        <button type="button" className="section-link section-link--soft" onClick={() => onOpenRoute(item.route)}>
-          {item.cta[lang]}
-        </button>
-      </div>
-    </article>
-  );
-}
-
-export function StationeryPage({ content, lang, pageData, onOpenRoute }: any) {
+export function StationeryPage({ content, lang, pageData, onOpenRoute }: StationeryPageProps) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeFilter, setActiveFilter] = useState('all');
   const [savedIds, setSavedIds] = useState(() => new Set());
@@ -146,7 +119,12 @@ export function StationeryPage({ content, lang, pageData, onOpenRoute }: any) {
     <div className="page-content page-content--stationery">
       <section
         className="stationery-hero glass"
-        style={{ '--stationery-hero-image': `url(${pageData.hero.image})` } as CSSProperties & Record<string, string>}
+        style={
+          {
+            '--stationery-hero-image': 'url(/assets/stationery-hero-desktop.jpg)',
+            '--stationery-hero-image-mobile': 'url(/assets/stationery-hero-mobile.jpg)',
+          } as CSSProperties & Record<string, string>
+        }
       >
         <div className="decor-layer decor-layer--hero stationery-hero__decor" aria-hidden="true">
           <span className="decor-cloud decor-cloud--far decor-cloud--1" />
@@ -176,18 +154,7 @@ export function StationeryPage({ content, lang, pageData, onOpenRoute }: any) {
           </div>
         </div>
 
-        <div className="stationery-hero__visual">
-          <div className="stationery-hero__card stationery-hero__card--main">
-            <img src={pageData.hero.image} alt={heroTitle} loading="eager" decoding="async" />
-          </div>
-          <div className="stationery-hero__card stationery-hero__card--mini">
-            <img src={pageData.hero.secondaryImage} alt="" loading="lazy" decoding="async" aria-hidden="true" />
-            <div>
-              <strong>{lang === 'vi' ? 'Sổ tay · Bút viết · Sticker' : 'Notebook · Pens · Stickers'}</strong>
-              <span>{lang === 'vi' ? 'Góc học tập gọn xinh hơn mỗi ngày' : 'A cute, tidy study corner every day'}</span>
-            </div>
-          </div>
-        </div>
+        <div className="stationery-hero__visual" aria-hidden="true" />
       </section>
 
       <section className="stationery-quick-grid">
@@ -199,7 +166,7 @@ export function StationeryPage({ content, lang, pageData, onOpenRoute }: any) {
             onClick={() => setCategory(item.id)}
           >
             <span className="stationery-quick-card__icon" aria-hidden="true">
-              {item.icon}
+              {item.iconSrc ? <img src={item.iconSrc} alt="" loading="lazy" decoding="async" /> : item.icon}
             </span>
             <span className="stationery-quick-card__label">{item.label[lang]}</span>
           </button>
@@ -217,24 +184,6 @@ export function StationeryPage({ content, lang, pageData, onOpenRoute }: any) {
             {item.label[lang]}
           </button>
         ))}
-      </section>
-
-      <section className="stationery-section glass">
-        <div className="stationery-section__head">
-          <div>
-            <h2>{pageData.vibeTitle[lang]}</h2>
-            <p>{pageData.vibeSubtitle[lang]}</p>
-          </div>
-          <button type="button" className="section-link section-link--soft" onClick={scrollToProducts}>
-            {lang === 'vi' ? 'Xem tất cả' : 'View all'}
-          </button>
-        </div>
-
-        <div className="stationery-vibe-rail">
-          {pageData.vibes.map((item) => (
-            <StationeryVibeCard key={item.id} lang={lang} item={item} onOpenRoute={onOpenRoute} />
-          ))}
-        </div>
       </section>
 
       <section ref={productsRef} className="stationery-section" id="stationery-products">
@@ -286,36 +235,6 @@ export function StationeryPage({ content, lang, pageData, onOpenRoute }: any) {
                 variant="spotlight"
               />
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="stationery-banner glass">
-        <div className="stationery-banner__copy">
-          <p className="stationery-banner__eyebrow">{lang === 'vi' ? 'Bì Bì gợi ý hôm nay' : 'Bì Bì’s today pick'}</p>
-          <h2>{pageData.bannerTitle[lang]}</h2>
-          <p>{pageData.bannerSubtitle[lang]}</p>
-          <button type="button" className="section-link stationery-banner__button" onClick={() => onOpenRoute(pageData.bannerRoute)}>
-            {pageData.bannerCta[lang]}
-          </button>
-        </div>
-
-        <div className="stationery-banner__art" aria-hidden="true">
-          <img src={pageData.bannerMascot} alt="" loading="lazy" decoding="async" />
-        </div>
-      </section>
-
-      <section className="stationery-section">
-        <div className="stationery-section__head">
-          <div>
-            <h2>{pageData.needsTitle[lang]}</h2>
-            <p>{pageData.needsSubtitle[lang]}</p>
-          </div>
-        </div>
-
-        <div className="stationery-need-grid">
-          {pageData.needs.map((item) => (
-            <StationeryNeedCard key={item.id} lang={lang} item={item} onOpenRoute={onOpenRoute} />
           ))}
         </div>
       </section>
